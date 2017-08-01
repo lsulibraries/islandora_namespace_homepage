@@ -1,0 +1,4 @@
+<?php
+
+?>
+<div><?php echo $yo; ?></div>

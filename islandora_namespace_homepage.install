@@ -1,0 +1,35 @@
+<?php
+
+/**
+ * Implements hook_install().
+ */
+//function islandora_namespace_homepage_install() {
+//  node_types_rebuild();
+//  $types = node_type_get_types();
+//  node_add_body_field($types['islandora_namespace_homepage']);
+//  variable_set('comment_islandora_namespace_homepage', COMMENT_NODE_CLOSED);
+//  $all_collections = islandora_basic_collection_get_collections();
+//  module_load_include('inc', 'drush_util', 'includes/util');
+//  foreach (array_unique(array_keys($all_collections)) as $collection) {
+//    $ns = array_shift(explode('-', $collection));
+//    // create ns homepage;
+//    $tmpTitle = strtoupper($ns) . " Homepage";
+//    $tmpDescription = "No description has been provided yet for $ns";
+//    create_node('islandora_namespace_homepage', $tmpTitle, $tmpDescription, $ns);
+//  }
+//}
+
+/**
+ * Implements hook_uninstall().
+ */
+//function islandora_namespace_homepage_uninstall() {
+//  $ournewtype = 'islandora_namespace_homepage';
+//  $sql = 'SELECT nid FROM {node} n WHERE n.type = :type';
+//  $result = db_query($sql, array(':type' => $ournewtype));
+//  $nodeids = array();
+//  foreach ($result as $row) {
+//    $nodeids[] = $row->nid;
+//  }
+//  node_delete_multiple($nodeids);
+//  node_type_delete($ournewtype);
+//}

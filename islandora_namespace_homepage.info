@@ -1,0 +1,7 @@
+name = islandora_namespace_homepage
+description = Defines a content type
+package = islandora
+core = 7.x
+dependencies[] = drush_util
+files[] = islandora_namespace_homepage.install
+files[] = islandora_namespace_homepage.module
