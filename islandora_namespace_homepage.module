@@ -4,68 +4,134 @@
  * Implements hook_menu.
  */
 function islandora_namespace_homepage_menu() {
-    $items['institutions/%'] = array(
+  $namespace_prefixes = get_all_namespace_prefixes(FALSE);
+  variable_set('islandora_namespace_homepage_prefixes', $namespace_prefixes);
+  $items = array();
+  foreach ($namespace_prefixes as $prefix) {
+    $path = $prefix;
+    $items[$path] = array(
       'page callback' => 'namespace_homepage_page',
-      'page arguments' => array(1),
+      'page arguments' => array(0),
       'access callback' => TRUE,
       'type' => MENU_NORMAL_ITEM,
     );
-    return $items;
+    $items[$path . '/admin'] = array(
+      'page callback' => 'namespace_homepage_page',
+      'page arguments' => array(0),
+      'access callback' => TRUE,
+      'type' => MENU_NORMAL_ITEM,
+    );
+  }
+  return $items;
+}
+
+function get_all_namespace_prefixes($cache = TRUE) {
+  // Use a stored value when appropriate.
+  if ($cache) {
+    return variable_get('islandora_namespace_homepage_prefixes');
+  }
+
+  $namespace_prefixes = array();
+  foreach (array_keys(islandora_basic_collection_get_collections()) as $collection) {
+    $prefix = parse_pid_for_prefix($collection);
+    if (!$prefix) {
+      continue;
+    }
+    $namespace_prefixes[] = $prefix;
+  }
+
+  return array_unique($namespace_prefixes);
+}
+
+function parse_pid_for_prefix($pid) {
+  $parts = explode('-', $pid);
+  $num_parts = count($parts);
+  if ($num_parts <= 1) {
+    return FALSE;
+  }
+  elseif ($num_parts == 2) {
+    return $parts[0];
+  }
+  else {
+    // Remove alias + ':collection'.
+    array_pop($parts);
+    $prefix = implode('-', $parts);
+    return $prefix;
+  }
 }
 
 function namespace_homepage_page($namespace) {
-  return theme('test_my_stuff', array('namespace' => $namespace));
+  $variables = array();
+  $variables['namespace'] = $namespace;
+
+  $collections = array();
+  foreach (get_namespace_collections($namespace, TRUE) as $pid) {
+    $object = islandora_object_load($pid);
+    $mods = simplexml_load_string($object['MODS']->content);
+    $object->description = (string) $mods->abstract;
+    $collections[$pid] = $object;
+  }
+  $variables['collections'] = $collections;
+
+  $content = array();
+  $content[] = array(
+    '#type' => 'markup',
+    '#markup' => theme('test_my_stuff', array('nsHome' => $variables)),
+  );
+  return $content;
 }
 
 /**
- * Implements hook_node_info()
+ * Get the pids for a given ns prefix and optionally, child prefixes.
+ * 
+ * @param type $target_prefix
+ * 
+ * @param type $children
+ * @return type
  */
-//function islandora_namespace_homepage_node_info() {
-//  return array(
-//    'islandora_namespace_homepage' => array(
-//      'name' => t('Namespace Homepage'),
-//      'base' => 'islandora_namespace_homepage',
-//      'description' => t('Public landing page for islandora namespace prefixes.'),
-//      'has_title' => TRUE,
-//      'title_label' => t('Namespace Owner'),
-//      'comment' => COMMENT_NODE_CLOSED,
-//    )
-//  );
-//}
+function get_namespace_collections($target_prefix, $children = FALSE) {
+  $all_pids = array_keys(islandora_basic_collection_get_collections());
 
-/**
- * Implement hook_form()
- */
-//function islandora_namespace_homepage_form($node, $form_state) {
-//  return node_content_form($node, $form_state);
-//}
+  $filter = function($pid) use ($target_prefix, $children) {
+    $pfx = parse_pid_for_prefix($pid);
+    return $children ? preg_match("/^$target_prefix/", $pfx) : $pfx == $target_prefix;
+  };
+
+  $namespace_pids = array_filter($all_pids, $filter);
+  return $namespace_pids;
+}
 
 /**
  * Implements hook_theme().
  * 
- * thx to https://www.drupal.org/docs/7/creating-custom-modules/howtos/using-template-tplphp-files-in-your-own-module
- */
+  */
 function islandora_namespace_homepage_theme($existing, $type, $theme, $path) {
-
-//  $theme['islandora_namespace_homepage'] = array(
-//    'file' => 'theme/theme.inc',
-//    'template' => 'theme/islandora-namespace-homepage',
-//    'pattern' => 'islandora_namespace_homepage__',
-//    'variables' => array('islandora_ns_home' => NULL),
-//  );
   return array(
     'test_my_stuff' => array(
-      'variables' => array('namespace' => 'all'),
+      'variables' => array('nsHome' => array()),
+      'template' => 'templates/islandora-namespace-homepage',
     ),
   );
 }
 
-function theme_test_my_stuff($variables) {
-  return 'hello ' . $variables['namespace'];
-}
-
-function islandora_namespace_homepage_node_view($node, $view_mode, $langcode) {
-  if($node->type == 'islandora_namespace_homepage') {
-    $variables['islandora_ns_home']['hello'] = "yo bruh";
+/**
+ * Implements hook_islandora_object_ingested().
+ *
+ * When a new collection object is ingested, check to see if the namespace
+ * prefix is already cached in the variables table.
+ * 
+ * If not, trigger a menu_rebuild(), which will in turn call this module's
+ * hook_menu() which will refresh the list of known prefixes.
+ */
+function islandora_namespace_homepage_islandora_object_ingested(AbstractObject $object) {
+  if (in_array('islandora:collectionCModel', $object->models)) {
+    $prefix = parse_pid_for_prefix($object->id);
+    $cached_prefixes = variable_get('islandora_namespace_homepage_prefixes');
+    if (!in_array($prefix, $cached_prefixes)) {
+      menu_rebuild();
+    }
   }
 }
+//function theme_test_my_stuff($variables) {
+//  return '<h2>hello ' . $variables['namespace'] .'</h2>';
+//}
