@@ -1,6 +1,15 @@
 <?php
 
 /**
+ * 
+ * @return string
+ * The namespace of this module.
+ */
+function dplns() {
+  return 'islandora_namespace_homepage';
+}
+
+/**
  * Implements hook_menu.
  */
 function islandora_namespace_homepage_menu() {
@@ -16,9 +25,12 @@ function islandora_namespace_homepage_menu() {
       'type' => MENU_NORMAL_ITEM,
     );
     $items[$path . '/admin'] = array(
-      'page callback' => 'namespace_homepage_page',
-      'page arguments' => array(0),
-      'access callback' => TRUE,
+      'title' => 'Islandora URL Redirector',
+      'description' => 'Configure Islandora URL Redirector.',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('admin_form', 0),
+      'access arguments' => array('Create child collections'),
+//      'access callback' => TRUE,
       'type' => MENU_NORMAL_ITEM,
     );
   }
@@ -28,7 +40,8 @@ function islandora_namespace_homepage_menu() {
 function get_all_namespace_prefixes($cache = TRUE) {
   // Use a stored value when appropriate.
   if ($cache) {
-    return variable_get('islandora_namespace_homepage_prefixes');
+    $cache_key = dplns() . '_prefixes';
+    return variable_get($cache_key);
   }
 
   $namespace_prefixes = array();
@@ -73,12 +86,63 @@ function namespace_homepage_page($namespace) {
   }
   $variables['collections'] = $collections;
 
+  $record = get_record($namespace);
+  $variables['title'] = get_field_or_default('title', $record);
+  $variables['description'] = get_field_or_default('description', $record);
+
+  $file = isset($record->logo) ? file_load($record->logo) : FALSE;
+  if ($file) {
+    $file_url = file_create_url($file->uri);
+    $variables['logo_href'] = $file_url;
+  }
+
+  $variables['search'] = drupal_get_form('myform');
   $content = array();
   $content[] = array(
     '#type' => 'markup',
     '#markup' => theme('test_my_stuff', array('nsHome' => $variables)),
   );
   return $content;
+}
+
+function myform() {
+  $form = array();
+  $form['term'] = array(
+    '#type' => 'textfield',
+    '#title' => "Search",
+  );
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Submit'),
+    '#submit' => array('myform_handle'),
+  );
+  return $form;
+}
+
+function myform_handle($form, &$form_state) {
+  $term = $form_state['values']['term'];
+  $query = array('type' => 'edismax');
+  $query['fq'] = 'lsu';
+  drupal_goto('islandora/search/' . $term, array('query' => $query));
+}
+
+function get_field_or_default($key, $record) {
+  return isset($record->$key) ? $record->$key : "No value set for $key";
+}
+
+function islandora_namespace_homepage_islandora_solr_query($islandora_solr_query) {
+  // Query param 'ns' gets set on form submission so that we can use it here.
+  if (!isset($_GET['ns'])) {
+    return;
+  }
+  // Account for multiple namespaces: foreach ($names as $spaces) { //create filter, add to solrParams}
+  $namespaces = $_GET['ns'];
+
+  $filter = format_string('!field:!value', array(
+    '!field' => 'PID',
+    '!value' => $namespaces,
+  ));
+  $islandora_solr_query->solrParams['fq'][] = $filter;
 }
 
 /**
@@ -104,7 +168,7 @@ function get_namespace_collections($target_prefix, $children = FALSE) {
 /**
  * Implements hook_theme().
  * 
-  */
+ */
 function islandora_namespace_homepage_theme($existing, $type, $theme, $path) {
   return array(
     'test_my_stuff' => array(
@@ -132,6 +196,103 @@ function islandora_namespace_homepage_islandora_object_ingested(AbstractObject $
     }
   }
 }
-//function theme_test_my_stuff($variables) {
-//  return '<h2>hello ' . $variables['namespace'] .'</h2>';
-//}
+
+function get_record($prefix) {
+  $tbl = dplns();
+  $query = "SELECT id, prefix, title, description, logo from {$tbl} WHERE prefix = :p";
+  $args = array(':p' => $prefix);
+  $record = db_query($query, $args);
+  return $record->fetchObject();
+}
+
+function admin_form($form, &$form_state, $ns) {
+  $title_field = "{$ns}_title";
+  $descr_field = "{$ns}_description";
+  $logo_field = "{$ns}_logo";
+  $dplns = dplns();
+  $tbl_prefix = $dplns . "_";
+
+  $data = get_record($ns);
+  $defval = function($key) use ($data) {
+    return isset($data->$key) ? $data->$key : '';
+  };
+  $form = array();
+  $form['title'] = array(
+    '#type' => 'textfield',
+    '#title' => "Full title for namespace '$ns'",
+    '#default_value' => $defval('title'),
+  );
+  $form['description'] = array(
+    '#type' => 'text_format',
+    '#title' => "Description for namespace '$ns'",
+    '#default_value' => $defval('description'),
+  );
+  $form['logo'] = array(
+    '#type' => 'managed_file',
+    '#title' => t('Logo'),
+    '#description' => t('Upload a file, allowed extensions: jpg, jpeg, png, gif'),
+    '#default_value' => $defval('logo'),
+    '#upload_location' => 'public://namespace-thumbs/',
+  );
+  $form["ns"] = array(
+    '#type' => 'hidden',
+    '#value' => $ns,
+  );
+  $form["submit"] = array(
+    '#type' => 'submit',
+    '#value' => 'Submit'
+  );
+  return $form;
+}
+
+function islandora_namespace_homepage_admin_form() {
+  
+}
+
+function admin_form_submit($form, &$form_state) {
+
+  $v = $form_state['values'];
+  $mod = dplns();
+  $p = $mod . '_';
+  $ns = $v['ns'];
+
+  $exists = get_record($ns);
+  $record = $exists ? $exists : new stdClass();
+
+  $title_key = "title";
+  $descr_key = "description";
+  $logo_key = "logo";
+
+  if ($form_state['values'][$logo_key]) {
+    // Load the file via file.fid.
+    $file = file_load($form_state['values'][$logo_key]);
+
+    // Change status to permanent.
+    $file->status = FILE_STATUS_PERMANENT;
+
+    // Save.
+    $file = file_save($file);
+  }
+
+  $record->$title_key = $v[$title_key];
+  $record->$descr_key = $v[$descr_key]['value'];
+  $record->$logo_key = isset($file->fid) ? $file->fid : NULL;
+
+  if (!$exists) {
+    $record->prefix = $ns;
+    $record->id = db_insert($mod)
+        ->fields((array) $record)
+        ->execute();
+  }
+  else {
+    $record->id = db_update($mod)
+        ->fields((array) $record)
+        ->condition('prefix', $record->prefix, '=')
+        ->execute();
+  }
+
+  // Record that the module (in this example, user module) is using the file. 
+  if (isset($file)) {
+    file_usage_add($file, $mod, $mod, $record->id);
+  }
+}

@@ -1,35 +1,47 @@
 <?php
 
 /**
- * Implements hook_install().
+ * Implements hook_schema().
  */
-//function islandora_namespace_homepage_install() {
-//  node_types_rebuild();
-//  $types = node_type_get_types();
-//  node_add_body_field($types['islandora_namespace_homepage']);
-//  variable_set('comment_islandora_namespace_homepage', COMMENT_NODE_CLOSED);
-//  $all_collections = islandora_basic_collection_get_collections();
-//  module_load_include('inc', 'drush_util', 'includes/util');
-//  foreach (array_unique(array_keys($all_collections)) as $collection) {
-//    $ns = array_shift(explode('-', $collection));
-//    // create ns homepage;
-//    $tmpTitle = strtoupper($ns) . " Homepage";
-//    $tmpDescription = "No description has been provided yet for $ns";
-//    create_node('islandora_namespace_homepage', $tmpTitle, $tmpDescription, $ns);
-//  }
-//}
+function islandora_namespace_homepage_schema() {
+  $schema['islandora_namespace_homepage'] = array(
+    'description' => 'Table that stores lists of IP ranges.',
+    'fields' => array(
+      'id' => array(
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'tbl id.',
+      ),
+      'prefix' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'description' => 'The prefix itself.',
+      ),
+      'title' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'description' => 'The full name represented by the prefix.',
+      ),
+      'description' => array(
+        'type' => 'text',
+        'not null' => TRUE,
+        'description' => 'The description of the entity represented by the prefix.',
+      ),
+      'logo' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => FALSE,
+        'description' => 'File id (fid) of the managed file that serves as the logo for this entity.',
+      ),
+    ),
+    'primary key' => array('id'),
+    'unique keys' => array(
+      'uqprefix' => array('prefix'),
+    ),
+  );
 
-/**
- * Implements hook_uninstall().
- */
-//function islandora_namespace_homepage_uninstall() {
-//  $ournewtype = 'islandora_namespace_homepage';
-//  $sql = 'SELECT nid FROM {node} n WHERE n.type = :type';
-//  $result = db_query($sql, array(':type' => $ournewtype));
-//  $nodeids = array();
-//  foreach ($result as $row) {
-//    $nodeids[] = $row->nid;
-//  }
-//  node_delete_multiple($nodeids);
-//  node_type_delete($ournewtype);
-//}
+  return $schema;
+}

@@ -1,14 +1,19 @@
 <?php ?>
 <div class="institution-header">
-    <div class="institution-logo">logo goes here</div>
-    <div class="institution-title">Institution Title here</div>
+    <a href="<?php echo "/" . $nsHome['namespace'] . "/admin"; ?>">edit</a>
+    <div class="institution-logo">
+        <?php if (isset($nsHome['logo_href'])): ?>
+        <img src="<?php echo $nsHome['logo_href']; ?>" style="max-width: 100px;">
+        <?php endif; ?>
+    </div>
+    <div class="institution-title"><h2><?php echo $nsHome['title']; ?></h2></div>
 </div>
 
-<div class="institution-about">About this institution...</div>
+<div class="institution-about"><?php echo $nsHome['description']; ?></div>
 
-<div class="institution-search">Search box goes here</div>
+<div class="institution-search"><?php echo render($nsHome['search']); ?></div>
 
-<div class="institution-browse-bys">browse-bys here</div>
+<div class="institution-browse-bys"></div>
 
 <div class="institution-collections">
     <ul class="institution-collection-list">
