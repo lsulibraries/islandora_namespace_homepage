@@ -64,7 +64,7 @@ function update_namespace_prefixes_cache() {
     }
     $namespace_prefixes[] = $prefix;
   }
-  $prefixes = array_unique(array_keys($namespace_prefixes));
+  $prefixes = array_unique(array_values($namespace_prefixes));
 
   vs('prefixes', $prefixes);
 
@@ -128,7 +128,7 @@ function namespace_homepage_page($namespace) {
     $variables['logo_href'] = $file_url;
   }
 
-  $variables['search'] = drupal_get_form('myform');
+  $variables['search'] = drupal_get_form('myform', $namespace);
   $content = array();
   $content[] = array(
     '#type' => 'markup',
@@ -137,11 +137,17 @@ function namespace_homepage_page($namespace) {
   return $content;
 }
 
-function myform() {
+function myform($form, &$form_state, $namespace) {
   $form = array();
   $form['term'] = array(
     '#type' => 'textfield',
     '#title' => "Search",
+  );
+  $form['namespace'] = array(
+    '#title' => 'Search within institutions',
+    '#type' => 'hidden',
+    '#value' => $namespace,
+    '#weight' => 5,
   );
   $form['submit'] = array(
     '#type' => 'submit',
@@ -152,29 +158,26 @@ function myform() {
 }
 
 function myform_handle($form, &$form_state) {
-  $term = $form_state['values']['term'];
-  $query = array('type' => 'edismax');
-  $query['fq'] = 'lsu';
-  drupal_goto('islandora/search/' . $term, array('query' => $query));
+  $namespace = $form_state['values']['namespace'];
+  $child_ns  = get_namespace_children($namespace);
+  $namespaces = array($namespace . '*');
+  foreach ($child_ns as $child) {
+    $namespaces[] = $child . '*';
+  }
+  // See islandora_solr/includes/blocks.inc
+  $search_string = islandora_solr_replace_slashes($form_state['values']['term']);
+  $query = array('type' => 'dismax', 'ns' => $namespaces);
+
+  $form_state['redirect'] = array(
+    ISLANDORA_SOLR_SEARCH_PATH . "/$search_string",
+    array(
+      'query' => $query,
+    ),
+  );
 }
 
 function get_field_or_default($key, $record) {
   return isset($record->$key) ? $record->$key : "No value set for $key";
-}
-
-function islandora_namespace_homepage_islandora_solr_query($islandora_solr_query) {
-  // Query param 'ns' gets set on form submission so that we can use it here.
-  if (!isset($_GET['ns'])) {
-    return;
-  }
-  // Account for multiple namespaces: foreach ($names as $spaces) { //create filter, add to solrParams}
-  $namespaces = $_GET['ns'];
-
-  $filter = format_string('!field:!value', array(
-    '!field' => 'PID',
-    '!value' => $namespaces,
-  ));
-  $islandora_solr_query->solrParams['fq'][] = $filter;
 }
 
 /**
