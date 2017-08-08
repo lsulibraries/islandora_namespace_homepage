@@ -28,3 +28,20 @@
           <?php endforeach; ?>
     </ul>
 </div>
+
+<div class="child-institution-collections">
+    <?php foreach ($nsHome['child_collections_for_display'] as $ns => $data): ?>
+    <div class="child-institution-title"><?php echo $data['title']; ?></div>
+    <ul class="child-institution-collection-list">
+        <?php foreach ($data['collections'] as $coll): ?>
+        <li class="child-institution-collection-list-item">
+            <a href='/<?php echo "islandora/object/" . $coll; ?>'>
+              <?php echo $coll; ?>
+            </a>
+            <div class='institution-collection-description'><?php //echo $object->description; ?></div>
+        </li>
+        <?php endforeach; ?>
+    </ul>
+    <?php endforeach; ?>
+</div>
+

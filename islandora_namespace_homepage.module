@@ -9,12 +9,20 @@ function dplns() {
   return 'islandora_namespace_homepage';
 }
 
+function vg($key) {
+  return variable_get(dplns() . '_' . $key, FALSE);
+}
+
+function vs($key, $val) {
+  return variable_set(dplns() . '_' . $key, $val);
+}
+
 /**
  * Implements hook_menu.
  */
 function islandora_namespace_homepage_menu() {
-  $namespace_prefixes = get_all_namespace_prefixes(FALSE);
-  variable_set('islandora_namespace_homepage_prefixes', $namespace_prefixes);
+  $namespace_prefixes = get_namespace_prefixes(FALSE);
+
   $items = array();
   foreach ($namespace_prefixes as $prefix) {
     $path = $prefix;
@@ -37,48 +45,71 @@ function islandora_namespace_homepage_menu() {
   return $items;
 }
 
-function get_all_namespace_prefixes($cache = TRUE) {
-  // Use a stored value when appropriate.
-  if ($cache) {
-    $cache_key = dplns() . '_prefixes';
-    return variable_get($cache_key);
-  }
+function get_namespace_prefixes($cache = TRUE) {
+  $prefixes_cache_value = vg('prefixes');
 
+  // Use a stored value when appropriate.
+  if (!$cache || !$prefixes_cache_value) {
+    return update_namespace_prefixes_cache();
+  }
+  return $prefixes_cache_value;
+}
+
+function update_namespace_prefixes_cache() {
   $namespace_prefixes = array();
   foreach (array_keys(islandora_basic_collection_get_collections()) as $collection) {
-    $prefix = parse_pid_for_prefix($collection);
+    $prefix = parse_pid($collection, 'prefix');
     if (!$prefix) {
       continue;
     }
     $namespace_prefixes[] = $prefix;
   }
+  $prefixes = array_unique(array_keys($namespace_prefixes));
 
-  return array_unique($namespace_prefixes);
+  vs('prefixes', $prefixes);
+
+  return $prefixes;
 }
 
-function parse_pid_for_prefix($pid) {
-  $parts = explode('-', $pid);
-  $num_parts = count($parts);
+function parse_pid($pid, $filter = NULL) {
+  $parts = explode(':', $pid);
+  $suffix = $parts[1];
+  $prefix_parts = explode('-', $parts[0]);
+  $num_parts = count($prefix_parts);
   if ($num_parts <= 1) {
     return FALSE;
   }
-  elseif ($num_parts == 2) {
-    return $parts[0];
-  }
-  else {
-    // Remove alias + ':collection'.
-    array_pop($parts);
-    $prefix = implode('-', $parts);
-    return $prefix;
+  $alias = array_pop($prefix_parts);
+  $prefix = implode('-', $prefix_parts);
+
+  switch ($filter) {
+    case('pid'):
+      return $pid;
+
+    case('prefix'):
+      return $prefix;
+
+    case('alias'):
+      return $alias;
+
+    case('suffix'):
+      return $suffix;
+
+    case('namespace'):
+      return $prefix . '-' . $alias;
+
+    default:
+      return array($prefix, $alias, $suffix);
   }
 }
 
 function namespace_homepage_page($namespace) {
+  update_namespace_heirarchy_cache();
   $variables = array();
   $variables['namespace'] = $namespace;
 
   $collections = array();
-  foreach (get_namespace_collections($namespace, TRUE) as $pid) {
+  foreach (get_namespace_collections($namespace) as $pid) {
     $object = islandora_object_load($pid);
     $mods = simplexml_load_string($object['MODS']->content);
     $object->description = (string) $mods->abstract;
@@ -86,6 +117,7 @@ function namespace_homepage_page($namespace) {
   }
   $variables['collections'] = $collections;
 
+  $variables['child_collections_for_display'] = get_child_collections_for_display($namespace);
   $record = get_record($namespace);
   $variables['title'] = get_field_or_default('title', $record);
   $variables['description'] = get_field_or_default('description', $record);
@@ -150,19 +182,89 @@ function islandora_namespace_homepage_islandora_solr_query($islandora_solr_query
  * 
  * @param type $target_prefix
  * 
- * @param type $children
+ * @param type $recurse
  * @return type
  */
-function get_namespace_collections($target_prefix, $children = FALSE) {
-  $all_pids = array_keys(islandora_basic_collection_get_collections());
+function get_namespace_collections($target_prefix, $recurse = FALSE) {
+  $heirarchy = get_namespace_subtree($target_prefix);
+  $collections = get_collections_from_heirarchy($heirarchy, $target_prefix, $recurse);
+  return $collections;
+}
 
-  $filter = function($pid) use ($target_prefix, $children) {
-    $pfx = parse_pid_for_prefix($pid);
-    return $children ? preg_match("/^$target_prefix/", $pfx) : $pfx == $target_prefix;
+function get_namespace_subtree($namespace) {
+  $heirarchy = vg('heirarchy');
+  $steps = explode('-', $namespace);
+  $key = '';
+  while (!empty($steps)) {
+    $step = array_shift($steps);
+    $key = $key ? $key . '-' . $step : $step;
+    $heirarchy = $heirarchy[$key];
+  }
+  return $heirarchy;
+}
+
+function get_collections_from_heirarchy($heirarchy, $key, $recurse = FALSE) {
+  $collections = array();
+  foreach ($heirarchy as $name => $value) {
+    if ($name == 'collections') {
+      $collections += (array) $value;
+    }
+    elseif ($recurse) {
+      $new_key = $key . '-' . $name;
+      $collections[$new_key] = array_merge($collections, get_collections_from_heirarchy($heirarchy[$name], $new_key, $recurse));
+    }
+  }
+  return $collections;
+}
+
+function get_child_collections_for_display($namespace) {
+  $child_ns = get_namespace_children($namespace);
+  $child_collections = array();
+  foreach ($child_ns as $ns) {
+    $child_collections[$ns] = array('collections' => get_namespace_collections($ns));
+    $child_collections[$ns]['title'] = inh_title($ns);
+  }
+
+  return $child_collections;
+}
+
+function get_namespace_children($namespace) {
+  $subtree = get_namespace_subtree($namespace);
+  unset($subtree['collections']);
+  return array_keys($subtree);
+}
+
+function update_namespace_heirarchy_cache($namespace = 'all') {
+  $ns = function($pid) {
+    return parse_pid($pid, 'pid');
   };
+  $collections = array_filter(array_map($ns, array_keys(islandora_basic_collection_get_collections())));
+  $heirarchy = array();
+  foreach ($collections as $collection) {
+    $branch_segments = explode('-', $collection);
+    $branch = flat_to_nest($branch_segments);
+    $heirarchy = array_merge_recursive($heirarchy, $branch);
+  }
+  vs('heirarchy', $heirarchy);
+}
 
-  $namespace_pids = array_filter($all_pids, $filter);
-  return $namespace_pids;
+function collection_is_in_namespace($pid, $namespace, $consider_children = FALSE) {
+  $pfx = parse_pid($pid, 'prefix');
+  return $consider_children ? preg_match("/^$namespace/", $pfx) : $pfx == $namespace;
+}
+
+function flat_to_nest($flat, $prefix = '') {
+  $first = array_shift($flat);
+  $nest = array();
+  if (empty($flat)) {
+    $pid = $prefix . '-' . $first;
+    return array('collections' => $pid);
+  }
+  else {
+    $prefix = strlen($prefix) ? $prefix . '-' . $first : $first;
+    $nest[$prefix] = flat_to_nest($flat, $prefix);
+    return $nest;
+  }
 }
 
 /**
@@ -189,7 +291,7 @@ function islandora_namespace_homepage_theme($existing, $type, $theme, $path) {
  */
 function islandora_namespace_homepage_islandora_object_ingested(AbstractObject $object) {
   if (in_array('islandora:collectionCModel', $object->models)) {
-    $prefix = parse_pid_for_prefix($object->id);
+    $prefix = parse_pid($object->id, 'prefix');
     $cached_prefixes = variable_get('islandora_namespace_homepage_prefixes');
     if (!in_array($prefix, $cached_prefixes)) {
       menu_rebuild();
@@ -295,4 +397,22 @@ function admin_form_submit($form, &$form_state) {
   if (isset($file)) {
     file_usage_add($file, $mod, $mod, $record->id);
   }
+}
+
+function inh_table($key, $fields = array()) {
+  $keyfield = is_numeric($key) ? 'id' : 'prefix';
+//  $field = $field ? $field : '*';
+  $result = db_select('islandora_namespace_homepage', 'inh')
+  ->fields('inh', $fields)
+  ->condition($keyfield, $key)
+  ->execute();
+  return $result->fetchObject();
+}
+
+function inh_title($namespace) {
+  $row = inh_table($namespace, array('title'));
+  if (!$row) {
+    return "No Title set for $namespace.";
+  }
+  return $row->title;
 }
