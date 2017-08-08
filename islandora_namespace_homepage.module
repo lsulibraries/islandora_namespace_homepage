@@ -419,3 +419,77 @@ function inh_title($namespace) {
   }
   return $row->title;
 }
+
+function islandora_namespace_homepage_islandora_solr_query($islandora_solr_query) {
+  // Query param 'ns' gets set on form submission so that we can use it here.
+  if(!isset($_GET['ns'])){
+    return;
+  }
+  $namespaces = $_GET['ns'];
+  $filtered_ns = array_values(array_filter($namespaces));
+
+  if (count($filtered_ns) > 1) {
+    $ns_filters = array();
+    foreach ($filtered_ns as $ns) {
+      $ns_filters[] = "PID:$ns";
+    }
+
+    $filter = implode(' OR ', $ns_filters);
+  } else {
+    $filter = format_string('!field:!value', array(
+      '!field' => 'PID',
+      '!value' => array_shift($filtered_ns),
+    ));
+  }
+  $islandora_solr_query->solrParams['fq'][] = $filter;
+}
+
+function islandora_namespace_homepage_form_islandora_solr_advanced_search_form_alter(&$form, &$form_state) {
+  $ns_array = get_all_collections_inst();
+  $pruned_ns = array();
+  foreach($ns_array as $key => $value){
+    $pruned_ns[$key] = $value;
+  }
+  $form['namespaces'] = array(
+    '#title' => 'Search within institutions',
+    '#type' => 'checkboxes',
+    '#options' => array_flip($pruned_ns), //array_flip(get_all_collections_inst()), //unserialize(file_get_contents('cache_file')),
+    '#weight' => 5,
+  );
+  $form['controls']['#weight'] = 6;
+  // Gives us a chance to add 'ns' to the URL for use in altering the query (above).
+  $form['#submit'][] = 'islandora_namespace_homepage_append_ns';
+}
+
+
+
+
+function islandora_namespace_homepage_append_ns($form, &$form_state) {
+
+  // Set the 'ns' query param to be fetched later from $_GET.
+  $ns_selected = array_filter($form_state['values']['namespaces']);
+
+  if (count($ns_selected) > 0) {
+    $form_state['redirect'][1]['query']['ns'] = $ns_selected;
+  }
+}
+
+function get_all_collections_inst(){
+  $connection = islandora_get_tuque_connection();
+  if ($connection) {
+    $query = <<<EOQ
+  SELECT ?pid FROM <#ri>
+  WHERE { 
+    ?pid <fedora-rels-ext:isMemberOfCollection> <info:fedora/islandora:root>
+  }
+EOQ;
+ $results = $connection->repository->ri->sparqlQuery($query);
+  }
+  $objects = array();
+ foreach($results as $key => $value){
+   $plode = explode('-', $results[$key]['pid']['value']);
+   $objects[$plode[0]] =  $plode[0] . '*';
+ }
+ //$objects['all'] = '*';
+ return array_unique($objects);
+}
