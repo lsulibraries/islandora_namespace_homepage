@@ -105,6 +105,9 @@ function islandora_namespace_homepage_islandora_object_ingested(AbstractObject $
   }
 }
 
+/**
+ * Implements hook_islandora_solr_query().
+ */
 function islandora_namespace_homepage_islandora_solr_query($islandora_solr_query) {
   // Query param 'ns' gets set on form submission so that we can use it here.
   if (!isset($_GET['ns'])) {
