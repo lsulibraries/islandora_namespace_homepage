@@ -33,12 +33,11 @@ function islandora_namespace_homepage_menu() {
       'type' => MENU_NORMAL_ITEM,
     );
     $items[$path . '/admin'] = array(
-      'title' => 'Islandora URL Redirector',
-      'description' => 'Configure Islandora URL Redirector.',
+      'title' => 'admin',
+      'description' => 'Configure landing page.',
       'page callback' => 'drupal_get_form',
       'page arguments' => array('admin_form', 0),
-      'access arguments' => array('Create child collections'),
-//      'access callback' => TRUE,
+      'access callback' => TRUE,
       'type' => MENU_NORMAL_ITEM,
     );
   }
