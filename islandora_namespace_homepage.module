@@ -1,24 +1,18 @@
 <?php
 
-/**
- * 
- * @return string
- * The namespace of this module.
- */
-function dplns() {
-  return 'islandora_namespace_homepage';
-}
+require_once 'includes/utilities.php';
+require_once 'includes/namespaces.php';
+require_once 'includes/db.php';
+require_once 'includes/access.php';
+require_once 'includes/forms.php';
 
-function vg($key) {
-  return variable_get(dplns() . '_' . $key, FALSE);
-}
 
-function vs($key, $val) {
-  return variable_set(dplns() . '_' . $key, $val);
-}
+// Constants.
+define('ISLANDORA_NAMESPACE_HOMEPAGE_ADMINISTER_HOMEPAGE', 'namespace administer homepages');
+define('ISLANDORA_NAMESPACE_HOMEPAGE_OBJECT_MANAGEMENT_EXEMPT', 'object management restriction exempt');
 
 /**
- * Implements hook_menu.
+ * Implements hook_menu().
  */
 function islandora_namespace_homepage_menu() {
   $namespace_prefixes = get_namespace_prefixes(FALSE);
@@ -37,69 +31,12 @@ function islandora_namespace_homepage_menu() {
       'description' => 'Configure landing page.',
       'page callback' => 'drupal_get_form',
       'page arguments' => array('admin_form', 0),
-      'access callback' => TRUE,
+      'access callback' => 'homepage_administrator_access_callback',
+      'access arguments' => array(0),
       'type' => MENU_NORMAL_ITEM,
     );
   }
   return $items;
-}
-
-function get_namespace_prefixes($cache = TRUE) {
-  $prefixes_cache_value = vg('prefixes');
-
-  // Use a stored value when appropriate.
-  if (!$cache || !$prefixes_cache_value) {
-    return update_namespace_prefixes_cache();
-  }
-  return $prefixes_cache_value;
-}
-
-function update_namespace_prefixes_cache() {
-  $namespace_prefixes = array();
-  foreach (array_keys(islandora_basic_collection_get_collections()) as $collection) {
-    $prefix = parse_pid($collection, 'prefix');
-    if (!$prefix) {
-      continue;
-    }
-    $namespace_prefixes[] = $prefix;
-  }
-  $prefixes = array_unique(array_values($namespace_prefixes));
-
-  vs('prefixes', $prefixes);
-
-  return $prefixes;
-}
-
-function parse_pid($pid, $filter = NULL) {
-  $parts = explode(':', $pid);
-  $suffix = $parts[1];
-  $prefix_parts = explode('-', $parts[0]);
-  $num_parts = count($prefix_parts);
-  if ($num_parts <= 1) {
-    return FALSE;
-  }
-  $alias = array_pop($prefix_parts);
-  $prefix = implode('-', $prefix_parts);
-
-  switch ($filter) {
-    case('pid'):
-      return $pid;
-
-    case('prefix'):
-      return $prefix;
-
-    case('alias'):
-      return $alias;
-
-    case('suffix'):
-      return $suffix;
-
-    case('namespace'):
-      return $prefix . '-' . $alias;
-
-    default:
-      return array($prefix, $alias, $suffix);
-  }
 }
 
 function namespace_homepage_page($namespace) {
@@ -136,139 +73,6 @@ function namespace_homepage_page($namespace) {
   return $content;
 }
 
-function myform($form, &$form_state, $namespace) {
-  $form = array();
-  $form['term'] = array(
-    '#type' => 'textfield',
-    '#title' => "Search",
-  );
-  $form['namespace'] = array(
-    '#title' => 'Search within institutions',
-    '#type' => 'hidden',
-    '#value' => $namespace,
-    '#weight' => 5,
-  );
-  $form['submit'] = array(
-    '#type' => 'submit',
-    '#value' => t('Submit'),
-    '#submit' => array('myform_handle'),
-  );
-  return $form;
-}
-
-function myform_handle($form, &$form_state) {
-  $namespace = $form_state['values']['namespace'];
-  $child_ns  = get_namespace_children($namespace);
-  $namespaces = array($namespace . '*');
-  foreach ($child_ns as $child) {
-    $namespaces[] = $child . '*';
-  }
-  // See islandora_solr/includes/blocks.inc
-  $search_string = islandora_solr_replace_slashes($form_state['values']['term']);
-  $query = array('type' => 'dismax', 'ns' => $namespaces);
-
-  $form_state['redirect'] = array(
-    ISLANDORA_SOLR_SEARCH_PATH . "/$search_string",
-    array(
-      'query' => $query,
-    ),
-  );
-}
-
-function get_field_or_default($key, $record) {
-  return isset($record->$key) ? $record->$key : "No value set for $key";
-}
-
-/**
- * Get the pids for a given ns prefix and optionally, child prefixes.
- * 
- * @param type $target_prefix
- * 
- * @param type $recurse
- * @return type
- */
-function get_namespace_collections($target_prefix, $recurse = FALSE) {
-  $heirarchy = get_namespace_subtree($target_prefix);
-  $collections = get_collections_from_heirarchy($heirarchy, $target_prefix, $recurse);
-  return $collections;
-}
-
-function get_namespace_subtree($namespace) {
-  $heirarchy = vg('heirarchy');
-  $steps = explode('-', $namespace);
-  $key = '';
-  while (!empty($steps)) {
-    $step = array_shift($steps);
-    $key = $key ? $key . '-' . $step : $step;
-    $heirarchy = $heirarchy[$key];
-  }
-  return $heirarchy;
-}
-
-function get_collections_from_heirarchy($heirarchy, $key, $recurse = FALSE) {
-  $collections = array();
-  foreach ($heirarchy as $name => $value) {
-    if ($name == 'collections') {
-      $collections += (array) $value;
-    }
-    elseif ($recurse) {
-      $new_key = $key . '-' . $name;
-      $collections[$new_key] = array_merge($collections, get_collections_from_heirarchy($heirarchy[$name], $new_key, $recurse));
-    }
-  }
-  return $collections;
-}
-
-function get_child_collections_for_display($namespace) {
-  $child_ns = get_namespace_children($namespace);
-  $child_collections = array();
-  foreach ($child_ns as $ns) {
-    $child_collections[$ns] = array('collections' => get_namespace_collections($ns));
-    $child_collections[$ns]['title'] = inh_title($ns);
-  }
-
-  return $child_collections;
-}
-
-function get_namespace_children($namespace) {
-  $subtree = get_namespace_subtree($namespace);
-  unset($subtree['collections']);
-  return array_keys($subtree);
-}
-
-function update_namespace_heirarchy_cache($namespace = 'all') {
-  $ns = function($pid) {
-    return parse_pid($pid, 'pid');
-  };
-  $collections = array_filter(array_map($ns, array_keys(islandora_basic_collection_get_collections())));
-  $heirarchy = array();
-  foreach ($collections as $collection) {
-    $branch_segments = explode('-', $collection);
-    $branch = flat_to_nest($branch_segments);
-    $heirarchy = array_merge_recursive($heirarchy, $branch);
-  }
-  vs('heirarchy', $heirarchy);
-}
-
-function collection_is_in_namespace($pid, $namespace, $consider_children = FALSE) {
-  $pfx = parse_pid($pid, 'prefix');
-  return $consider_children ? preg_match("/^$namespace/", $pfx) : $pfx == $namespace;
-}
-
-function flat_to_nest($flat, $prefix = '') {
-  $first = array_shift($flat);
-  $nest = array();
-  if (empty($flat)) {
-    $pid = $prefix . '-' . $first;
-    return array('collections' => $pid);
-  }
-  else {
-    $prefix = strlen($prefix) ? $prefix . '-' . $first : $first;
-    $nest[$prefix] = flat_to_nest($flat, $prefix);
-    return $nest;
-  }
-}
-
 /**
  * Implements hook_theme().
  * 
@@ -301,127 +105,9 @@ function islandora_namespace_homepage_islandora_object_ingested(AbstractObject $
   }
 }
 
-function get_record($prefix) {
-  $tbl = dplns();
-  $query = "SELECT id, prefix, title, description, logo from {$tbl} WHERE prefix = :p";
-  $args = array(':p' => $prefix);
-  $record = db_query($query, $args);
-  return $record->fetchObject();
-}
-
-function admin_form($form, &$form_state, $ns) {
-  $title_field = "{$ns}_title";
-  $descr_field = "{$ns}_description";
-  $logo_field = "{$ns}_logo";
-  $dplns = dplns();
-  $tbl_prefix = $dplns . "_";
-
-  $data = get_record($ns);
-  $defval = function($key) use ($data) {
-    return isset($data->$key) ? $data->$key : '';
-  };
-  $form = array();
-  $form['title'] = array(
-    '#type' => 'textfield',
-    '#title' => "Full title for namespace '$ns'",
-    '#default_value' => $defval('title'),
-  );
-  $form['description'] = array(
-    '#type' => 'text_format',
-    '#title' => "Description for namespace '$ns'",
-    '#default_value' => $defval('description'),
-  );
-  $form['logo'] = array(
-    '#type' => 'managed_file',
-    '#title' => t('Logo'),
-    '#description' => t('Upload a file, allowed extensions: jpg, jpeg, png, gif'),
-    '#default_value' => $defval('logo'),
-    '#upload_location' => 'public://namespace-thumbs/',
-  );
-  $form["ns"] = array(
-    '#type' => 'hidden',
-    '#value' => $ns,
-  );
-  $form["submit"] = array(
-    '#type' => 'submit',
-    '#value' => 'Submit'
-  );
-  return $form;
-}
-
-function islandora_namespace_homepage_admin_form() {
-  
-}
-
-function admin_form_submit($form, &$form_state) {
-
-  $v = $form_state['values'];
-  $mod = dplns();
-  $p = $mod . '_';
-  $ns = $v['ns'];
-
-  $exists = get_record($ns);
-  $record = $exists ? $exists : new stdClass();
-
-  $title_key = "title";
-  $descr_key = "description";
-  $logo_key = "logo";
-
-  if ($form_state['values'][$logo_key]) {
-    // Load the file via file.fid.
-    $file = file_load($form_state['values'][$logo_key]);
-
-    // Change status to permanent.
-    $file->status = FILE_STATUS_PERMANENT;
-
-    // Save.
-    $file = file_save($file);
-  }
-
-  $record->$title_key = $v[$title_key];
-  $record->$descr_key = $v[$descr_key]['value'];
-  $record->$logo_key = isset($file->fid) ? $file->fid : NULL;
-
-  if (!$exists) {
-    $record->prefix = $ns;
-    $record->id = db_insert($mod)
-        ->fields((array) $record)
-        ->execute();
-  }
-  else {
-    $record->id = db_update($mod)
-        ->fields((array) $record)
-        ->condition('prefix', $record->prefix, '=')
-        ->execute();
-  }
-
-  // Record that the module (in this example, user module) is using the file. 
-  if (isset($file)) {
-    file_usage_add($file, $mod, $mod, $record->id);
-  }
-}
-
-function inh_table($key, $fields = array()) {
-  $keyfield = is_numeric($key) ? 'id' : 'prefix';
-//  $field = $field ? $field : '*';
-  $result = db_select('islandora_namespace_homepage', 'inh')
-  ->fields('inh', $fields)
-  ->condition($keyfield, $key)
-  ->execute();
-  return $result->fetchObject();
-}
-
-function inh_title($namespace) {
-  $row = inh_table($namespace, array('title'));
-  if (!$row) {
-    return "No Title set for $namespace.";
-  }
-  return $row->title;
-}
-
 function islandora_namespace_homepage_islandora_solr_query($islandora_solr_query) {
   // Query param 'ns' gets set on form submission so that we can use it here.
-  if(!isset($_GET['ns'])){
+  if (!isset($_GET['ns'])) {
     return;
   }
   $namespaces = $_GET['ns'];
@@ -434,7 +120,8 @@ function islandora_namespace_homepage_islandora_solr_query($islandora_solr_query
     }
 
     $filter = implode(' OR ', $ns_filters);
-  } else {
+  }
+  else {
     $filter = format_string('!field:!value', array(
       '!field' => 'PID',
       '!value' => array_shift($filtered_ns),
@@ -446,7 +133,7 @@ function islandora_namespace_homepage_islandora_solr_query($islandora_solr_query
 function islandora_namespace_homepage_form_islandora_solr_advanced_search_form_alter(&$form, &$form_state) {
   $ns_array = get_all_collections_inst();
   $pruned_ns = array();
-  foreach($ns_array as $key => $value){
+  foreach ($ns_array as $key => $value) {
     $pruned_ns[$key] = $value;
   }
   $form['namespaces'] = array(
@@ -460,9 +147,6 @@ function islandora_namespace_homepage_form_islandora_solr_advanced_search_form_a
   $form['#submit'][] = 'islandora_namespace_homepage_append_ns';
 }
 
-
-
-
 function islandora_namespace_homepage_append_ns($form, &$form_state) {
 
   // Set the 'ns' query param to be fetched later from $_GET.
@@ -473,22 +157,57 @@ function islandora_namespace_homepage_append_ns($form, &$form_state) {
   }
 }
 
-function get_all_collections_inst(){
-  $connection = islandora_get_tuque_connection();
-  if ($connection) {
-    $query = <<<EOQ
-  SELECT ?pid FROM <#ri>
-  WHERE { 
-    ?pid <fedora-rels-ext:isMemberOfCollection> <info:fedora/islandora:root>
+/**
+ * Implements hook_permission().
+ */
+function islandora_namespace_homepage_permission() {
+  return array(
+    ISLANDORA_NAMESPACE_HOMEPAGE_ADMINISTER_HOMEPAGE => array(
+      'title' => t('Administer namespace homepages.'),
+      'description' => t('Administer namespace homepages associated with your user profile.'),
+    ),
+    ISLANDORA_NAMESPACE_HOMEPAGE_OBJECT_MANAGEMENT_EXEMPT => array(
+      'title' => t('object management restriction exempt'),
+      'description' => t("Exemption from islandora object management restrictions."),
+    ),
+  );
+}
+
+function islandora_namespace_homepage_user_login_submit($form, &$form_state) {
+  $list = get_user_whitelist($form_state['uid']);
+  if(empty($list) | !is_array($list)){
+    return;
   }
-EOQ;
- $results = $connection->repository->ri->sparqlQuery($query);
-  }
-  $objects = array();
- foreach($results as $key => $value){
-   $plode = explode('-', $results[$key]['pid']['value']);
-   $objects[$plode[0]] =  $plode[0] . '*';
- }
- //$objects['all'] = '*';
- return array_unique($objects);
+
+  $_GET['destination'] = $list[0] . '/admin';
+  drupal_goto($list[0]);
+}
+
+function islandora_namespace_homepage_form_user_login_block_alter(&$form, &$form_state, $form_id) {
+  $form['#submit'][] = 'islandora_namespace_homepage_user_login_submit';
+}
+
+
+/**
+ * Implements hook_islandora_object_access
+ * 
+ * @param type $op
+ * @param type $object
+ * @param type $user
+ * @return TRUE|FALSE|NULL
+ */
+function islandora_namespace_homepage_islandora_object_access($op, $object, $user) {
+  return decide_access($user, $object);
+}
+
+/**
+ * Implements hook_islandora_datastream_access
+ *
+ * @param type $op
+ * @param type $object
+ * @param type $user
+ * @return TRUE|FALSE|NULL
+ */
+function islandora_namespace_homepage_islandora_datastream_access($op, $object, $user) {
+  return decide_access($user, $object->parent);
 }
