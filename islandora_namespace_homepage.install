@@ -76,6 +76,6 @@ function islandora_namespace_homepage_install() {
  * 
  */
 function islandora_namespace_homepage_uninstall() {
-  field_delete_field(ISLANDORA_NAMESPACE_HOMEPAGE_USER_NAMESPACE_FIELD_NAME);
+  field_delete_field('field_namespace');
   field_purge_batch(1);
 }
