@@ -6,15 +6,15 @@
  * @param type $object
  * @return TRUE|FALSE|NULL
  */
-function decide_access($user, $object) {
+function decide_access($user, $object, $op) {
   if (!url_is_protected()) {
     return NULL;
   }
-  elseif (user_access(ISLANDORA_NAMESPACED_OBJECT_MANAGEMENT_EXEMPT)) {
+  elseif (user_access(ISLANDORA_NAMESPACE_HOMEPAGE_OBJECT_MANAGEMENT_EXEMPT)) {
     return TRUE;
   }
   else {
-    return check_user_access_for_object($user, $object);
+    return check_user_access_for_object($user, $object, $op);
   }
 }
 
@@ -24,12 +24,28 @@ function decide_access($user, $object) {
  * @param type $object
  * @return TRUE|FALSE
  */
-function check_user_access_for_object($user, $object) {
-  $whitelist   = get_user_whitelist($user->uid);
-  $pid         = $object->id;
+function check_user_access_for_object($user, $object, $op) {
+  $pid = $object->id;
+  $op_view = 'view fedora repository objects';
+  $op_ingest = 'ingest fedora objects';
+  if ($pid == 'islandora:root') {
+    $safe_root_actions = array($op_view, $op_ingest);
+    if ($op == 'delete fedora objects and datastreams') {
+      return FALSE;
+    }
+    else {
+      return in_array($op, $safe_root_actions);
+    }
+  }
+  $whitelist = get_user_whitelist($user->uid);
   module_load_include('module', 'islandora_namespace_homepage');
   $institution = parse_pid($pid, 'prefix');
-  return in_array($institution, $whitelist);
+  if (in_array($institution, $whitelist)) {
+    return TRUE;
+  }
+  else {
+    return in_array($op, array($op_view));
+  }
 }
 
 /**
@@ -43,10 +59,11 @@ function get_user_whitelist($uid) {
 }
 
 /**
- * 
+ * @TODO add some more possibilities here, perhaps even admin config.
  * @return TRUE|FALSE
  */
 function url_is_protected() {
+  return TRUE;
   $url_segments = explode('/', request_path());
   if (in_array('manage', $url_segments)) {
     return TRUE;

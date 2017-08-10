@@ -45,3 +45,37 @@ function islandora_namespace_homepage_schema() {
 
   return $schema;
 }
+
+/**
+ * 
+ */
+function islandora_namespace_homepage_install() {
+  // Create a field.
+  $field = array(
+    'field_name'  => ISLANDORA_NAMESPACE_HOMEPAGE_USER_NAMESPACE_FIELD_NAME,
+    'cardinality' => -1,
+    'type'        => 'text',
+    'settings'    => array('maxlength' => 255),
+  );
+  field_create_field($field);
+
+  // Attach an existing field to the user object
+  $instance = array(
+    'field_name' => ISLANDORA_NAMESPACE_HOMEPAGE_USER_NAMESPACE_FIELD_NAME,
+    'entity_type' => 'user',
+    'bundle' => 'user',
+    'label' => 'Namespaces',
+    'widget' => array(
+      'type' => 'text_textfield',
+    ),
+  );
+  field_create_instance($instance);
+}
+
+/**
+ * 
+ */
+function islandora_namespace_homepage_uninstall() {
+  field_delete_field(ISLANDORA_NAMESPACE_HOMEPAGE_USER_NAMESPACE_FIELD_NAME);
+  field_purge_batch(1);
+}

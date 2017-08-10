@@ -1,15 +1,16 @@
 <?php
 
+// Constants.
+define('ISLANDORA_NAMESPACE_HOMEPAGE_ADMINISTER_HOMEPAGE', 'namespace administer homepages');
+define('ISLANDORA_NAMESPACE_HOMEPAGE_OBJECT_MANAGEMENT_EXEMPT', 'object management restriction exempt');
+define('ISLANDORA_NAMESPACE_HOMEPAGE_MANAGE_OWN_NAMESPACE', 'manage own namespace field');
+define('ISLANDORA_NAMESPACE_HOMEPAGE_USER_NAMESPACE_FIELD_NAME', 'field_namespace');
+
 require_once 'includes/utilities.php';
 require_once 'includes/namespaces.php';
 require_once 'includes/db.php';
 require_once 'includes/access.php';
 require_once 'includes/forms.php';
-
-
-// Constants.
-define('ISLANDORA_NAMESPACE_HOMEPAGE_ADMINISTER_HOMEPAGE', 'namespace administer homepages');
-define('ISLANDORA_NAMESPACE_HOMEPAGE_OBJECT_MANAGEMENT_EXEMPT', 'object management restriction exempt');
 
 /**
  * Implements hook_menu().
@@ -173,6 +174,10 @@ function islandora_namespace_homepage_permission() {
       'title' => t('object management restriction exempt'),
       'description' => t("Exemption from islandora object management restrictions."),
     ),
+    ISLANDORA_NAMESPACE_HOMEPAGE_MANAGE_OWN_NAMESPACE => array(
+      'title' => t('Manage own namespace association.'),
+      'description' => t("Set and modify user namespace associations."),
+    ),
   );
 }
 
@@ -200,7 +205,7 @@ function islandora_namespace_homepage_form_user_login_block_alter(&$form, &$form
  * @return TRUE|FALSE|NULL
  */
 function islandora_namespace_homepage_islandora_object_access($op, $object, $user) {
-  return decide_access($user, $object);
+  return decide_access($user, $object, $op);
 }
 
 /**
@@ -212,5 +217,38 @@ function islandora_namespace_homepage_islandora_object_access($op, $object, $use
  * @return TRUE|FALSE|NULL
  */
 function islandora_namespace_homepage_islandora_datastream_access($op, $object, $user) {
-  return decide_access($user, $object->parent);
+  return decide_access($user, $object->parent, $op);
+}
+
+function islandora_namespace_homepage_edit_islandora_object_ip_embargo($object) {
+  global $user;
+  $access = decide_access($user, $object, 'ip_embargo');
+  return $access;
+}
+
+function islandora_namespace_homepage_field_access($op, $field, $entity_type, $entity, $account) {
+  if ($field['field_name'] == ISLANDORA_NAMESPACE_HOMEPAGE_USER_NAMESPACE_FIELD_NAME && $op == 'edit') {
+    return user_access(ISLANDORA_NAMESPACE_HOMEPAGE_MANAGE_OWN_NAMESPACE);
+  }
+  return TRUE;
+}
+
+/**
+ * 
+ * @param type $user
+ * @return array
+ */
+function get_user_namespaces($uid) {
+  $account     = user_load($uid);
+  $field_name  = ISLANDORA_NAMESPACE_HOMEPAGE_USER_NAMESPACE_FIELD_NAME;
+  $field_items = field_get_items('user', $account, $field_name);
+
+  if (!$field_items) {
+    return array();
+  }
+  $namespaces = array();
+  foreach ($field_items as $item) {
+    $namespaces[] = $item['safe_value'];
+  }
+  return $namespaces;
 }

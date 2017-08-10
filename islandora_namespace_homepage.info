@@ -4,6 +4,5 @@ package = islandora
 core = 7.x
 dependencies[] = drush_util
 dependencies[] = islandora_solr
-dependencies[] = islandora_user_namespaces
 files[] = islandora_namespace_homepage.install
 files[] = islandora_namespace_homepage.module
