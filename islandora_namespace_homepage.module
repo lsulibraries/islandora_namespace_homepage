@@ -2,7 +2,7 @@
 
 // Constants.
 define('ISLANDORA_NAMESPACE_HOMEPAGE_ADMINISTER_HOMEPAGE', 'namespace administer homepages');
-define('ISLANDORA_NAMESPACE_HOMEPAGE_OBJECT_MANAGEMENT_EXEMPT', 'object management restriction exempt');
+define('ISLANDORA_NAMESPACE_HOMEPAGE_OBJECT_MANAGEMENT_EXEMPT', 'manage objects in any namespace');
 define('ISLANDORA_NAMESPACE_HOMEPAGE_MANAGE_OWN_NAMESPACE', 'manage own namespace field');
 define('ISLANDORA_NAMESPACE_HOMEPAGE_USER_NAMESPACE_FIELD_NAME', 'field_namespace');
 
@@ -171,8 +171,8 @@ function islandora_namespace_homepage_permission() {
       'description' => t('Administer namespace homepages associated with your user profile.'),
     ),
     ISLANDORA_NAMESPACE_HOMEPAGE_OBJECT_MANAGEMENT_EXEMPT => array(
-      'title' => t('object management restriction exempt'),
-      'description' => t("Exemption from islandora object management restrictions."),
+      'title' => t('manage objects in any namespace'),
+      'description' => t("Exemption from islandora object management namespace restrictions."),
     ),
     ISLANDORA_NAMESPACE_HOMEPAGE_MANAGE_OWN_NAMESPACE => array(
       'title' => t('Manage own namespace association.'),
