@@ -54,7 +54,6 @@ function check_user_access_for_object($user, $object, $op) {
  * @return array
  */
 function get_user_whitelist($uid) {
-  module_load_include('.module', 'islandora_user_namespaces');
   return get_user_namespaces($uid);
 }
 
