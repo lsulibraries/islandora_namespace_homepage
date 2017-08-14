@@ -1,4 +1,5 @@
 <?php ?>
+<div class="institution-title"><h2><?php echo $nsHome['title']; ?></h2></div>
 <div class="institution-header">
     <a href="<?php echo "/" . $nsHome['namespace'] . "/admin"; ?>">edit</a>
     <div class="institution-logo">
@@ -6,10 +7,8 @@
         <img src="<?php echo $nsHome['logo_href']; ?>" style="max-width: 100px;">
         <?php endif; ?>
     </div>
-    <div class="institution-title"><h2><?php echo $nsHome['title']; ?></h2></div>
+    <div class="institution-about"><?php echo $nsHome['description']; ?></div>
 </div>
-
-<div class="institution-about"><?php echo $nsHome['description']; ?></div>
 
 <div class="institution-search"><?php echo render($nsHome['search']); ?></div>
 
