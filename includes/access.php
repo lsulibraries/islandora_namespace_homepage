@@ -75,6 +75,10 @@ function homepage_administrator_access_callback($namespace) {
   if (!$general_access) {
     return FALSE;
   }
+  
+  if (user_access(ISLANDORA_NAMESPACE_HOMEPAGE_OBJECT_MANAGEMENT_EXEMPT)) {
+    return TRUE;
+  }
 
   global $user;
   $whitelist = get_user_whitelist($user->uid);
