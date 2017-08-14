@@ -26,6 +26,8 @@ function islandora_namespace_homepage_menu() {
       'page arguments' => array(0),
       'access callback' => TRUE,
       'type' => MENU_NORMAL_ITEM,
+      'title callback' => 'islandora_namespace_homepage_drupal_title',
+      'title arguments' => array(0),
     );
     $items[$path . '/admin'] = array(
       'title' => 'admin',
@@ -38,6 +40,10 @@ function islandora_namespace_homepage_menu() {
     );
   }
   return $items;
+}
+
+function islandora_namespace_homepage_drupal_title($prefix) {
+  return inh_title($prefix);
 }
 
 function namespace_homepage_page($namespace) {
