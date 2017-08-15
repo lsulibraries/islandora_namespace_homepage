@@ -258,3 +258,58 @@ function get_user_namespaces($uid) {
   }
   return $namespaces;
 }
+
+
+function islandora_namespace_homepage_form_alter(&$form, &$form_state, $form_id) {
+
+  if ($form_id != 'islandora_basic_collection_create_child_collection_form') {
+    return;
+  }
+  $user = user_uid_optional_load();
+  $form['policy']['namespace']['#access'] = FALSE;
+  $user_namespace = $user->field_namespace;
+  //if user has no namespace restrictons
+  if (empty($user_namespace)) {
+    $input_choice = 'textfield';
+    $options_or_default = '#default_value';
+    $default_namespace = 'islandora';
+    $inst_ns_description = "You have no namespace associated with your user account. Please provide an institutional prefix that matches this collection's owner";
+    $user_namespace_options = $default_namespace;
+  }
+  //otherwise the user has one or more namespaces
+  else {
+    if (count($user_namespace['und']) >= 1) {
+      $input_choice = 'select';
+      $options_or_default = '#options';
+      $inst_ns_description = "choose an institutional prefix for the namespace of this collection.";
+      $user_namespace_options = array();
+      foreach ($user_namespace['und'] as $key => $value) {
+        $user_namespace_options[$value['value']] = $value['value'];
+      }
+    }
+  }
+
+  $form['next']['#weight'] = 1;
+  $form['pid']['#access'] = FALSE;
+  $form['pid']['#element_validate'][] = 'collection_namespace_helper_validate';
+  $form['institution-prefix'] = array(
+    '#type' => $input_choice,
+    '#title' => t('Collection PID Prefix (Unique to Institution)'),
+    '#description' => t($inst_ns_description),
+    $options_or_default => $user_namespace_options,
+  );
+  $form['collection-alias'] = array(
+    '#type' => 'textfield',
+    '#description' => t("Enter a Collection alias, as part of this collection's PID"),
+    '#title' => t('Collection Alias (Unique to collection)'),
+  );
+
+  $form['#validate'][] = 'collection_namespace_helper_validate';
+
+  $form_state['validate_handlers'][] = 'collection_namespace_helper_validate';
+}
+
+function collection_namespace_helper_validate($form, &$form_state) {
+  $form_state['values']['pid'] = $form_state['values']['institution-prefix'] . '-' . $form_state['values']['collection-alias'] . ':collection';
+  $form_state['values']['namespace'] = substr($form_state['values']['pid'], 0, strpos($form_state['values']['pid'], ':'));
+}
