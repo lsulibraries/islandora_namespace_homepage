@@ -10,7 +10,7 @@ function vs($key, $val) {
 
 function get_record($prefix) {
   $tbl = dplns();
-  $query = "SELECT id, prefix, title, description, logo from {$tbl} WHERE prefix = :p";
+  $query = "SELECT * from {$tbl} WHERE prefix = :p";
   $args = array(':p' => $prefix);
   $record = db_query($query, $args);
   return $record->fetchObject();

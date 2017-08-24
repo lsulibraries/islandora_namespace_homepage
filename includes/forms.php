@@ -12,6 +12,10 @@ function admin_form($form, &$form_state, $ns) {
   $defval = function($key) use ($data) {
     return isset($data->$key) ? $data->$key : '';
   };
+
+  // Don't let unprivileged users alter harvest fields.
+  $harvest_access = user_access(ISLANDORA_NAMESPACE_HOMEPAGE_OBJECT_MANAGEMENT_EXEMPT);
+
   $form = array();
   $form['title'] = array(
     '#type' => 'textfield',
@@ -29,6 +33,19 @@ function admin_form($form, &$form_state, $ns) {
     '#description' => t('Upload a file, allowed extensions: jpg, jpeg, png, gif'),
     '#default_value' => $defval('logo'),
     '#upload_location' => 'public://namespace-thumbs/',
+  );
+  $form['harvested'] = array(
+    '#type' => 'textfield',
+    '#title' => "Base URL for harvested namespaces",
+    '#default_value' => $defval('harvested'),
+    '#access' => $harvest_access,
+  );
+  $form['harvested_regex'] = array(
+    '#type' => 'textfield',
+    '#title' => "Harvested-from url regex",
+    '#description' => 'Regex to capture the harvested-from url from a MODS.abstract field.',
+    '#default_value' => $defval('harvested_regex'),
+    '#access' => $harvest_access,
   );
   $form["ns"] = array(
     '#type' => 'hidden',
@@ -54,6 +71,8 @@ function admin_form_submit($form, &$form_state) {
   $title_key = "title";
   $descr_key = "description";
   $logo_key = "logo";
+  $harvested_key = "harvested";
+  $harvested_regex_key = "harvested_regex";
 
   if ($form_state['values'][$logo_key]) {
     // Load the file via file.fid.
@@ -69,6 +88,8 @@ function admin_form_submit($form, &$form_state) {
   $record->$title_key = $v[$title_key];
   $record->$descr_key = $v[$descr_key]['value'];
   $record->$logo_key = isset($file->fid) ? $file->fid : NULL;
+  $record->$harvested_key = !empty($v[$harvested_key]) ? $v[$harvested_key] : NULL;
+  $record->$harvested_regex_key = !empty($v[$harvested_regex_key]) ? $v[$harvested_regex_key] : NULL;
 
   if (!$exists) {
     $record->prefix = $ns;
