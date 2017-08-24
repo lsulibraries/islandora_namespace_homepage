@@ -29,7 +29,7 @@ function inh_table($key, $fields = array()) {
 function inh_title($namespace) {
   $row = inh_table($namespace, array('title'));
   if (!$row) {
-    return "No Title set for $namespace.";
+    return $namespace;
   }
   return $row->title;
 }

@@ -58,8 +58,18 @@ function parse_pid($pid, $filter = NULL) {
   }
 }
 
-function get_field_or_default($key, $record) {
-  return isset($record->$key) ? $record->$key : "No value set for $key";
+function get_field_or_default($key, $record, $namespace) {
+  switch ($key) {
+    case 'title':
+      return isset($record->$key) ? $record->$key : $namespace;
+
+    case 'description':
+      if (!isset($record->$key)) {
+        $name = ucwords(get_field_or_default('title', $record, $namespace));
+        return "$name is a contributing member of the Louisiana Digital Library.";
+      }
+      return $record->$key;
+  }
 }
 
 /**
