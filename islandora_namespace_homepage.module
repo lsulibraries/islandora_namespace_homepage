@@ -312,3 +312,50 @@ function collection_namespace_helper_validate($form, &$form_state) {
   $form_state['values']['pid'] = $form_state['values']['institution-prefix'] . '-' . $form_state['values']['collection-alias'] . ':collection';
   $form_state['values']['namespace'] = substr($form_state['values']['pid'], 0, strpos($form_state['values']['pid'], ':'));
 }
+
+/**
+ * Prepares variables for islandora_solr templates.
+ *
+ * Default template: theme/islandora-solr.tpl.php.
+ */
+function islandora_namespace_homepage_preprocess_islandora_solr(&$variables) {
+  $prefix_harvested_map = array();
+  foreach ($variables['results'] as $key => $result) {
+    $pid = $result['PID'];
+    $prefix = parse_pid($pid, 'prefix');
+
+    if ($prefix && !array_key_exists($prefix, $prefix_harvested_map)) {
+      $row = inh_table($prefix, array('harvested', 'harvested_regex'));
+      $harvested = empty($row) ? FALSE : $row->harvested;
+      $prefix_harvested_map[$prefix] = $harvested;
+    }
+
+    if ($prefix_harvested_map[$prefix] && $row->harvested_regex) {
+      $object = islandora_object_load($pid);
+      if (!$object) {
+        continue;
+      }
+      $mods = $object['MODS'];
+      $modsxml = simplexml_load_string($mods->content);
+      $pattern = sprintf('/%s/', $row->harvested_regex);
+
+      foreach ($modsxml->abstract as $abstract) {
+        $matches = array();
+        preg_match($pattern, $abstract, $matches);
+        if (isset($matches[1])) {
+          $link_back = $matches[1];
+          $thumbnail_xml = simplexml_load_string($result['thumbnail'], "SimpleXMLElement", LIBXML_NOXMLDECL);
+          if (!$thumbnail_xml) {
+            break;
+          }
+          $thumbnail_xml['href'] = $link_back;
+          $domdoc = new DOMDocument();
+          $domdoc->loadXML($thumbnail_xml->asXML());
+          $thumb = $domdoc->saveXML($domdoc->documentElement);
+          $variables['results'][$key]['thumbnail'] = $thumb;
+          break;
+        }
+      }
+    }
+  }
+}

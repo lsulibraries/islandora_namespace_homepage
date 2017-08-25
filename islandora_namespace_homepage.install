@@ -36,6 +36,20 @@ function islandora_namespace_homepage_schema() {
         'not null' => FALSE,
         'description' => 'File id (fid) of the managed file that serves as the logo for this entity.',
       ),
+      'harvested' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => FALSE,
+        'default' => NULL,
+        'description' => 'Base url from which records for this namespace have been harvested.',
+      ),
+      'harvested_regex' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => FALSE,
+        'default' => NULL,
+        'description' => 'regex to capture the harvested-from url from a mods abstract field.',
+      ),
     ),
     'primary key' => array('id'),
     'unique keys' => array(
@@ -78,4 +92,32 @@ function islandora_namespace_homepage_install() {
 function islandora_namespace_homepage_uninstall() {
   field_delete_field('field_namespace');
   field_purge_batch(1);
+}
+
+/**
+ * Add harvested field to {islandora_namespace_homepage} table.
+ */
+function islandora_namespace_homepage_update_7100() {
+  $spec = array(
+    'type' => 'varchar',
+    'length' => 255,
+    'not null' => FALSE,
+    'default' => NULL,
+    'description' => 'Base url from which records for this namespace have been harvested.',
+  );
+  db_add_field('islandora_namespace_homepage', 'harvested', $spec);
+}
+
+/**
+ * Add harvested_regex field to {islandora_namespace_homepage} table.
+ */
+function islandora_namespace_homepage_update_7101() {
+  $spec = array(
+    'type' => 'varchar',
+    'length' => 255,
+    'not null' => FALSE,
+    'default' => NULL,
+    'description' => 'regex to capture the harvested-from url from a mods abstract field.',
+  );
+  db_add_field('islandora_namespace_homepage', 'harvested_regex', $spec);
 }
