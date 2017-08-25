@@ -326,6 +326,9 @@ function islandora_namespace_homepage_preprocess_islandora_solr(&$variables) {
 
     if ($prefix && !array_key_exists($prefix, $prefix_harvested_map)) {
       $row = inh_table($prefix, array('harvested', 'harvested_regex'));
+      if (!$row) {
+        continue;
+      }
       $harvested = empty($row) ? FALSE : $row->harvested;
       $prefix_harvested_map[$prefix] = $harvested;
     }
