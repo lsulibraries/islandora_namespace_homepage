@@ -1,7 +1,9 @@
 <?php ?>
 <div class="institution-title"><h2><?php echo $nsHome['title']; ?></h2></div>
 <div class="institution-header">
-    <a href="<?php echo "/" . $nsHome['namespace'] . "/admin"; ?>">edit</a>
+    <?php if ($nsHome['namespace_admin']): ?>
+    <a href="<?php echo "/" . $nsHome['namespace'] . "/settings"; ?>">Edit Settings</a>
+    <?php endif; ?>
     <div class="institution-logo">
         <?php if (isset($nsHome['logo_href'])): ?>
         <img src="<?php echo $nsHome['logo_href']; ?>" style="max-width: 100px;">

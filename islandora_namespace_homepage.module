@@ -29,8 +29,8 @@ function islandora_namespace_homepage_menu() {
       'title callback' => 'islandora_namespace_homepage_drupal_title',
       'title arguments' => array(0),
     );
-    $items[$path . '/admin'] = array(
-      'title' => 'admin',
+    $items[$path . '/settings'] = array(
+      'title' => 'Settings',
       'description' => 'Configure landing page.',
       'page callback' => 'drupal_get_form',
       'page arguments' => array('admin_form', 0),
@@ -62,14 +62,15 @@ function namespace_homepage_page($namespace) {
 
   $variables['child_collections_for_display'] = get_child_collections_for_display($namespace);
   $record = get_record($namespace);
-  $variables['title'] = get_field_or_default('title', $record);
-  $variables['description'] = get_field_or_default('description', $record);
+  $variables['title'] = get_field_or_default('title', $record, $namespace);
+  $variables['description'] = get_field_or_default('description', $record, $namespace);
 
   $file = isset($record->logo) ? file_load($record->logo) : FALSE;
   if ($file) {
     $file_url = file_create_url($file->uri);
     $variables['logo_href'] = $file_url;
   }
+  $variables['namespace_admin'] = homepage_administrator_access_callback($namespace);
 
   $variables['search'] = drupal_get_form('myform', $namespace);
   $content = array();
@@ -189,18 +190,17 @@ function islandora_namespace_homepage_permission() {
 
 function islandora_namespace_homepage_user_login_submit($form, &$form_state) {
   $list = get_user_whitelist($form_state['uid']);
-  if(empty($list) | !is_array($list)){
+  if (empty($list) | !is_array($list)) {
     return;
   }
 
-  $_GET['destination'] = $list[0] . '/admin';
+  $_GET['destination'] = $list[0];
   drupal_goto($list[0]);
 }
 
 function islandora_namespace_homepage_form_user_login_block_alter(&$form, &$form_state, $form_id) {
   $form['#submit'][] = 'islandora_namespace_homepage_user_login_submit';
 }
-
 
 /**
  * Implements hook_islandora_object_access
@@ -245,8 +245,8 @@ function islandora_namespace_homepage_field_access($op, $field, $entity_type, $e
  * @return array
  */
 function get_user_namespaces($uid) {
-  $account     = user_load($uid);
-  $field_name  = ISLANDORA_NAMESPACE_HOMEPAGE_USER_NAMESPACE_FIELD_NAME;
+  $account = user_load($uid);
+  $field_name = ISLANDORA_NAMESPACE_HOMEPAGE_USER_NAMESPACE_FIELD_NAME;
   $field_items = field_get_items('user', $account, $field_name);
 
   if (!$field_items) {
@@ -258,7 +258,6 @@ function get_user_namespaces($uid) {
   }
   return $namespaces;
 }
-
 
 function islandora_namespace_homepage_form_alter(&$form, &$form_state, $form_id) {
 
