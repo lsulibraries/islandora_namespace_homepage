@@ -346,6 +346,9 @@ function islandora_namespace_homepage_preprocess_islandora_solr(&$variables) {
         if (isset($matches[1])) {
           $link_back = $matches[1];
           $thumbnail_xml = simplexml_load_string($result['thumbnail'], "SimpleXMLElement", LIBXML_NOXMLDECL);
+          if (!$thumbnail_xml) {
+            break;
+          }
           $thumbnail_xml['href'] = $link_back;
           $domdoc = new DOMDocument();
           $domdoc->loadXML($thumbnail_xml->asXML());
