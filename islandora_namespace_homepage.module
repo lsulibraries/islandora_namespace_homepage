@@ -323,24 +323,30 @@ function islandora_namespace_homepage_preprocess_islandora_solr(&$variables) {
   foreach ($variables['results'] as $key => $result) {
     $pid = $result['PID'];
     $prefix = parse_pid($pid, 'prefix');
-
-    if ($prefix && !array_key_exists($prefix, $prefix_harvested_map)) {
-      $row = inh_table($prefix, array('harvested', 'harvested_regex'));
-      if (!$row) {
-        continue;
-      }
-      $harvested = empty($row) ? FALSE : $row->harvested;
-      $prefix_harvested_map[$prefix] = $harvested;
+    if (!$prefix) {
+      continue;
     }
 
-    if ($prefix_harvested_map[$prefix] && $row->harvested_regex) {
+    $caching_needed = $prefix && !array_key_exists($prefix, $prefix_harvested_map);
+    // Update the local cache of prefix data.
+    if ($caching_needed) {
+      $row = inh_table($prefix, array('harvested_regex'));
+      if (FALSE === $row || !isset($row->harvested_regex)) {
+        continue;
+      }
+
+      $regex = empty($row) ? FALSE : $row->harvested_regex;
+      $prefix_harvested_map[$prefix] = $regex;
+    }
+
+    if ($prefix && $prefix_harvested_map[$prefix]) {
       $object = islandora_object_load($pid);
       if (!$object) {
         continue;
       }
       $mods = $object['MODS'];
       $modsxml = simplexml_load_string($mods->content);
-      $pattern = sprintf('/%s/', $row->harvested_regex);
+      $pattern = sprintf('/%s/', $prefix_harvested_map[$prefix]);
 
       foreach ($modsxml->abstract as $abstract) {
         $matches = array();
