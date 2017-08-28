@@ -161,3 +161,31 @@ function flat_to_nest($flat, $prefix = '') {
     return $nest;
   }
 }
+
+// taken from islandora_namespace_homepage_preprocess_islandora_solr
+// which needs to be refactored
+function get_link_back_for_proxy_object($object, $namespace = NULL) {
+  if (!$object) {
+    return FALSE;
+  }
+  if (NULL === $namespace) {
+    $namespace = parse_pid($object->id, 'prefix');
+  }
+  $mods = $object['MODS'];
+  $modsxml = simplexml_load_string($mods->content);
+  $row = inh_table($namespace, array('harvested_regex'));
+  if (!isset($row->harvested_regex) && !is_string($row->harvested_regex)) {
+    return FALSE;
+  }
+  $regex = $row->harvested_regex;
+  $pattern = sprintf('/%s/', $regex);
+
+  foreach ($modsxml->abstract as $abstract) {
+    $matches = array();
+    preg_match($pattern, $abstract, $matches);
+    if (isset($matches[1])) {
+      return $matches[1];
+    }
+  }
+  return FALSE;
+}

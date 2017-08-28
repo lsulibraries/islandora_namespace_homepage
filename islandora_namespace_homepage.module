@@ -48,15 +48,28 @@ function islandora_namespace_homepage_drupal_title($prefix) {
 
 function namespace_homepage_page($namespace) {
   update_namespace_heirarchy_cache();
+
   $variables = array();
   $variables['namespace'] = $namespace;
+  $variables['namespace_admin'] = homepage_administrator_access_callback($namespace);
+  $variables['proxyAdmin'] = user_access(ISLANDORA_NAMESPACE_HOMEPAGE_OBJECT_MANAGEMENT_EXEMPT) && $variables['namespace_admin'];
 
+  $proxied = inh_field($namespace, 'harvested') ? TRUE : FALSE;
+  
   $collections = array();
   foreach (get_namespace_collections($namespace) as $pid) {
     $object = islandora_object_load($pid);
     $mods = simplexml_load_string($object['MODS']->content);
     $object->description = (string) $mods->abstract;
-    $collections[$pid] = $object;
+    $collections[$pid]['obj'] = $object;
+    $collections[$pid]['url'] = "/islandora/object/" . $object->id;
+    if ($proxied) {
+      $proxy_url = get_link_back_for_proxy_object($object, $namespace);
+      if ($proxy_url) {
+        $collections[$pid]['proxy_url'] = $collections[$pid]['url'] . '/manage';
+        $collections[$pid]['url'] = $proxy_url;
+      }
+    }
   }
   $variables['collections'] = $collections;
 
@@ -70,7 +83,6 @@ function namespace_homepage_page($namespace) {
     $file_url = file_create_url($file->uri);
     $variables['logo_href'] = $file_url;
   }
-  $variables['namespace_admin'] = homepage_administrator_access_callback($namespace);
 
   $variables['search'] = drupal_get_form('myform', $namespace);
   $content = array();

@@ -33,3 +33,11 @@ function inh_title($namespace) {
   }
   return $row->title;
 }
+
+function inh_field($namespace, $field) {
+  $row = inh_table($namespace, array($field));
+  if (!$row || !isset($row->$field)) {
+    return NULL;
+  }
+  return $row->$field;
+}

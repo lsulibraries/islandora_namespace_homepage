@@ -19,13 +19,19 @@
 <div class="institution-collections">
     <ul class="institution-collection-list">
         <div class="institution-collection-list-header">Collections</div>
-          <?php foreach ($nsHome['collections'] as $pid => $object): ?>
-          <li class="institution-collection-list-item">
-              <a href='/<?php echo "islandora/object/" . $object->id; ?>'>
-                <?php echo $object->label; ?>
-              </a>
-              <div class='institution-collection-description'><?php echo $object->description; ?></div>
-          </li>
+          <?php foreach ($nsHome['collections'] as $pid => $map): ?>
+            <li class="institution-collection-list-item">
+                <a href='<?php echo $map['url']; ?>'>
+                  <?php echo $map['obj']->label; ?>
+                </a>
+                <?php if ($nsHome['proxyAdmin'] && isset($map['proxy_url'])): ?>
+                <div class="institution-collection-list-item-manage-proxy">
+                      <a class="institution-collection-list-item-manage-proxy-link" href="<?php echo $map['proxy_url']?>">Manage proxy</a>
+                </div>
+                <?php endif; ?>
+                <div class='institution-collection-description'><?php echo $map['obj']->description; ?></div>
+            </li>
+            
           <?php endforeach; ?>
     </ul>
 </div>
