@@ -362,6 +362,16 @@ function islandora_namespace_homepage_preprocess_islandora_solr(&$variables) {
           $domdoc->loadXML($thumbnail_xml->asXML());
           $thumb = $domdoc->saveXML($domdoc->documentElement);
           $variables['results'][$key]['thumbnail'] = $thumb;
+
+          $title_xml = simplexml_load_string($result['solr_doc']['dc.title']['value']);
+          if(!$title_xml) {
+            break;
+          }
+          $title_xml['href'] = $link_back;
+          $domdoc = new DOMDocument();
+          $domdoc->loadXML($title_xml->asXML());
+          $title_href = $domdoc->saveXML($domdoc->documentElement);
+          $variables['results'][$key]['solr_doc']['dc.title']['value'] = $title_href;
           break;
         }
       }
