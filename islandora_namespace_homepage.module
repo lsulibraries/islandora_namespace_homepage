@@ -392,6 +392,9 @@ function islandora_namespace_homepage_preprocess_islandora_solr(&$variables) {
 }
 
 function islandora_namespace_homepage_islandora_breadcrumbs_alter(&$breadcrumbs, $context, $object) {
+  if (!$object) {
+    return;
+  }
   $prefix = parse_pid($object->id, 'prefix');
   $title = inh_title($prefix);
   $prefix_home = "<a href='/$prefix'>$title</a>";
