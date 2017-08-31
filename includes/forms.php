@@ -114,7 +114,10 @@ function myform($form, &$form_state, $namespace) {
   $form = array();
   $form['term'] = array(
     '#type' => 'textfield',
-    '#title' => "Search",
+    '#title' => "Search term",
+    '#attributes' => array(
+      'placeholder' => "Search these collections",
+      ),
   );
   $form['namespace'] = array(
     '#title' => 'Search within institutions',
