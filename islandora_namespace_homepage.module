@@ -52,7 +52,7 @@ function namespace_homepage_page($namespace) {
   $variables = array();
   $variables['namespace'] = $namespace;
   $variables['namespace_admin'] = homepage_administrator_access_callback($namespace);
-  $variables['proxyAdmin'] = user_access(ISLANDORA_NAMESPACE_HOMEPAGE_OBJECT_MANAGEMENT_EXEMPT) && $variables['namespace_admin'];
+  $variables['proxyAdmin'] = user_access(ISLANDORA_NAMESPACE_HOMEPAGE_OBJECT_MANAGEMENT_EXEMPT) || $variables['namespace_admin'];
 
   $proxied = inh_field($namespace, 'harvested') ? TRUE : FALSE;
   
