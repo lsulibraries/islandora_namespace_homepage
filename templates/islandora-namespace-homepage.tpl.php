@@ -2,7 +2,7 @@
 <div class="institution-title"><h2><?php echo $nsHome['title']; ?></h2></div>
 <div class="institution-header">
     <?php if ($nsHome['namespace_admin']): ?>
-    <a href="<?php echo "/" . $nsHome['namespace'] . "/settings"; ?>">Edit Settings</a>
+      <a class="institution-about-edit" href="<?php echo "/" . $nsHome['namespace'] . "/settings"; ?>">Edit Settings</a>
     <?php endif; ?>
     <div class="institution-logo">
         <?php if (isset($nsHome['logo_href'])): ?>
