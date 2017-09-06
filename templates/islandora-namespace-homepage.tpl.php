@@ -19,20 +19,20 @@
 <div class="institution-collections">
     <ul class="institution-collection-list">
         <div class="institution-collection-list-header">Collections</div>
-          <?php foreach ($nsHome['collections'] as $pid => $map): ?>
-            <li class="institution-collection-list-item">
-                <a href='<?php echo $map['url']; ?>'>
+        <?php foreach ($nsHome['collections'] as $pid => $map): ?>
+          <a href='<?php echo $map['url']; ?>'>
+              <li class="institution-collection-list-item">
                   <?php echo $map['obj']->label; ?>
-                </a>
-                <?php if ($nsHome['proxyAdmin'] && isset($map['proxy_url'])): ?>
-                <div class="institution-collection-list-item-manage-proxy">
-                      <a class="institution-collection-list-item-manage-proxy-link" href="<?php echo $map['proxy_url']?>">Manage proxy</a>
-                </div>
-                <?php endif; ?>
-                <div class='institution-collection-description'><?php echo $map['obj']->description; ?></div>
-            </li>
-            
-          <?php endforeach; ?>
+                  <?php if ($nsHome['proxyAdmin'] && isset($map['proxy_url'])): ?>
+                    <div class="institution-collection-list-item-manage-proxy">
+                        <a class="institution-collection-list-item-manage-proxy-link" href="<?php echo $map['proxy_url'] ?>">Manage proxy</a>
+                    </div>
+                  <?php endif; ?>
+                  <div class='institution-collection-description'><?php echo $map['obj']->description; ?></div>
+              </li>
+          </a>
+
+        <?php endforeach; ?>
     </ul>
 </div>
 
