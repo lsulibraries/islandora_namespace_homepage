@@ -58,6 +58,8 @@ function namespace_homepage_page($namespace) {
   
   $collections = array();
   foreach (get_namespace_collections($namespace) as $pid) {
+    list($count, $members) = islandora_basic_collection_get_member_objects(islandora_object_load($pid), 0, 20, 'view');
+    $collections[$pid]['count'] = $count;
     $object = islandora_object_load($pid);
     $mods = simplexml_load_string($object['MODS']->content);
     $object->description = (string) $mods->abstract;
@@ -376,7 +378,7 @@ function islandora_namespace_homepage_preprocess_islandora_solr(&$variables) {
           $variables['results'][$key]['thumbnail'] = $thumb;
 
           $title_xml = simplexml_load_string($result['solr_doc']['dc.title']['value']);
-          if(!$title_xml) {
+          if (!$title_xml) {
             break;
           }
           $title_xml['href'] = $link_back;
