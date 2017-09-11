@@ -39,17 +39,22 @@
 
 <div class="child-institution-collections">
     <?php foreach ($nsHome['child_collections_for_display'] as $ns => $data): ?>
-    <div class="child-institution-title"><?php echo $data['title']; ?></div>
-    <ul class="child-institution-collection-list">
-        <?php foreach ($data['collections'] as $coll): ?>
-        <li class="child-institution-collection-list-item">
-            <a href='/<?php echo "islandora/object/" . $coll; ?>'>
-              <?php echo $coll; ?>
-            </a>
-            <div class='institution-collection-description'><?php //echo $object->description; ?></div>
-        </li>
-        <?php endforeach; ?>
-    </ul>
+    <a href="<?php echo "/$ns"; ?>">
+        <div class="child-institution-container">
+          <div class="child-institution-title">
+            <?php echo $data['title']; ?>
+          </div>
+          <div class="child-institution-description">
+            <?php echo $data['description']; ?>
+          </div>
+          <div class="child-institution-count-collections">
+            <?php echo $data['collectioncount']; ?>
+          </div>
+          <div class="child-institution-count-items">
+            <?php echo $data['itemcount']; ?>
+          </div>
+        </div>
+    </a>
     <?php endforeach; ?>
 </div>
 

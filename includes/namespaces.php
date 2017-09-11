@@ -116,10 +116,21 @@ function get_child_collections_for_display($namespace) {
   $child_ns = get_namespace_children($namespace);
   $child_collections = array();
   foreach ($child_ns as $ns) {
-    $child_collections[$ns] = array('collections' => get_namespace_collections($ns));
+    $pids = get_namespace_collections($ns);
+    $child_collections[$ns]['collectioncount'] = count($pids);
+    $ns_itemcount = 0;
+    foreach($pids as $pid) {
+      $obj = islandora_object_load($pid);
+      if (!$obj) {
+        continue;
+      }
+      list($count, $members) = islandora_basic_collection_get_member_objects(islandora_object_load($pid), 0, 20, 'view');
+      $ns_itemcount += $count;
+    }
+    $child_collections[$ns]['itemcount'] = $ns_itemcount;
     $child_collections[$ns]['title'] = inh_title($ns);
+    $child_collections[$ns]['description'] = inh_field($ns, 'description');
   }
-
   return $child_collections;
 }
 
