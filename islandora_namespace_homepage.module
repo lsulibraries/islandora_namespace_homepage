@@ -55,11 +55,11 @@ function namespace_homepage_page($namespace) {
   $variables['proxyAdmin'] = user_access(ISLANDORA_NAMESPACE_HOMEPAGE_OBJECT_MANAGEMENT_EXEMPT) || $variables['namespace_admin'];
 
   $proxied = inh_field($namespace, 'harvested') ? TRUE : FALSE;
-  
+
   $collections = array();
   foreach (get_namespace_collections($namespace) as $pid) {
     list($count, $members) = islandora_basic_collection_get_member_objects(islandora_object_load($pid), 0, 20, 'view');
-    $collections[$pid]['count'] = $count;
+    //$collections[$pid]['count'] = $count;
     $object = islandora_object_load($pid);
     $mods = simplexml_load_string($object['MODS']->content);
     $object->description = (string) $mods->abstract;

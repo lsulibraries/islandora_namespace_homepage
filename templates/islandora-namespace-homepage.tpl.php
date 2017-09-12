@@ -22,7 +22,7 @@
         <?php foreach ($nsHome['collections'] as $pid => $map): ?>
           <a class="institution-collection-list-a" href='<?php echo $map['url']; ?>'>
               <li class="institution-collection-list-li">
-                  <div class="institution-collection-list-item-count"><?php echo $map['count']; ?></div>
+                  <!--<div class="institution-collection-list-item-count"><?php //echo $map['count']; ?></div> -->
                   <div class="institution-collection-list-item-label"><?php echo $map['obj']->label; ?></div>
                   <?php if ($nsHome['proxyAdmin'] && isset($map['proxy_url'])): ?>
                     <div class="institution-collection-list-item-manage-proxy">
