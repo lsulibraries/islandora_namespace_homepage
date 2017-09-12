@@ -129,8 +129,8 @@ function get_child_collections_for_display($namespace, $reset = FALSE) {
         if (!$obj) {
           continue;
         }
-        list($count, $members) = islandora_basic_collection_get_member_objects(islandora_object_load($pid), 0, 20, 'view');
-        $ns_itemcount += $count;
+
+        $ns_itemcount += islandora_namespace_homepage_collection_item_count($pid);
       }
       $child_collections[$ns]['itemcount'] = $ns_itemcount;
       $child_collections[$ns]['title'] = inh_title($ns);

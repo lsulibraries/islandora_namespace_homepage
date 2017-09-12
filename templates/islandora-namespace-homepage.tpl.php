@@ -27,7 +27,7 @@
           <?php endif; ?>
           <div class="institution-collection-list-a" data-target='<?php echo $map['url']; ?>'>
               <li class="institution-collection-list-li">
-                  <!--<div class="institution-collection-list-item-count"><?php //echo $map['count']; ?></div> -->
+                  <div class="institution-collection-list-item-count"><?php echo $map['count']; ?></div>
                   <div class="institution-collection-list-item-label"><?php echo $map['obj']->label; ?></div>
                   <div class='institution-collection-description'><?php echo $map['obj']->description; ?></div>
               </li>

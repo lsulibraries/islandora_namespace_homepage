@@ -46,6 +46,18 @@ function islandora_namespace_homepage_drupal_title($prefix) {
   return inh_title($prefix);
 }
 
+function islandora_namespace_homepage_collection_item_count($pid, $reset = FALSE) {
+  $cache_key = 'islandora_namespace_homepage_item_count_' . $pid;
+  if (!$reset && ($cache = cache_get($cache_key)) && !empty($cache->data)) {
+    $itemcount = unserialize($cache->data);
+  }
+  else {
+    list($itemcount, $members) = islandora_basic_collection_get_member_objects(islandora_object_load($pid), 0, 20, 'view');
+    cache_set($cache_key, serialize($itemcount), 'cache', CACHE_PERMANENT);
+  }
+  return $itemcount;
+}
+
 function namespace_homepage_page($namespace) {
   update_namespace_heirarchy_cache();
 
@@ -58,8 +70,7 @@ function namespace_homepage_page($namespace) {
 
   $collections = array();
   foreach (get_namespace_collections($namespace) as $pid) {
-    //list($count, $members) = islandora_basic_collection_get_member_objects(islandora_object_load($pid), 0, 20, 'view');
-    //$collections[$pid]['count'] = $count;
+    $collections[$pid]['count'] = islandora_namespace_homepage_collection_item_count($pid);
     $object = islandora_object_load($pid);
     $mods = simplexml_load_string($object['MODS']->content);
     $object->description = (string) $mods->abstract;
