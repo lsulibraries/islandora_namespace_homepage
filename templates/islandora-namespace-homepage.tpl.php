@@ -20,17 +20,17 @@
     <ul class="institution-collection-list">
         <div class="institution-collection-list-header">Collections</div>
         <?php foreach ($nsHome['collections'] as $pid => $map): ?>
-          <?php if ($nsHome['proxyAdmin'] && isset($map['proxy_url'])): ?>
-            <div class="institution-collection-list-item-manage-proxy">
-                <a class="institution-collection-list-item-manage-proxy-link" href="<?php echo $map['proxy_url'] ?>">Manage proxy</a>
-            </div>
-          <?php endif; ?>
           <div class="institution-collection-list-a" data-target='<?php echo $map['url']; ?>'>
               <li class="institution-collection-list-li">
                   <div class="institution-collection-list-item-count"><?php echo $map['count']; ?></div>
                   <div class="institution-collection-list-item-label"><?php echo $map['obj']->label; ?></div>
                   <div class='institution-collection-description'><?php echo $map['obj']->description; ?></div>
               </li>
+              <?php if ($nsHome['proxyAdmin'] && isset($map['proxy_url'])): ?>
+                <div class="institution-collection-list-item-manage-proxy">
+                    <a class="institution-collection-list-item-manage-proxy-link" href="<?php echo $map['proxy_url'] ?>">Manage proxy</a>
+                </div>
+              <?php endif; ?>
           </div>
 
         <?php endforeach; ?>
