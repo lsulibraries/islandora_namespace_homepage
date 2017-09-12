@@ -62,7 +62,7 @@ function namespace_homepage_page($namespace) {
     //$collections[$pid]['count'] = $count;
     $object = islandora_object_load($pid);
     $mods = simplexml_load_string($object['MODS']->content);
-    $object->description = htmlentities((string) $mods->abstract);
+    $object->description = (string) $mods->abstract;
     $collections[$pid]['obj'] = $object;
     $collections[$pid]['url'] = "/islandora/object/" . $object->id;
     if ($proxied) {
