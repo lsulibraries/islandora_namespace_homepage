@@ -388,6 +388,7 @@ function islandora_namespace_homepage_preprocess_islandora_solr(&$variables) {
           $thumb = $domdoc->saveXML($domdoc->documentElement);
           $variables['results'][$key]['thumbnail'] = $thumb;
 
+          libxml_use_internal_errors(true);
           try {
             $title_xml = simplexml_load_string($result['solr_doc']['dc.title']['value']);
           }
@@ -397,6 +398,10 @@ function islandora_namespace_homepage_preprocess_islandora_solr(&$variables) {
             break;
           }
           if (!$title_xml) {
+            $xml_errors = libxml_get_errors();
+            $err_string = implode("\n", $xml_errors);
+            watchdog('simplexml', $err_string, $result, WATCHDOG_WARNING);
+            libxml_clear_errors();
             break;
           }
           $title_xml['href'] = $link_back;
