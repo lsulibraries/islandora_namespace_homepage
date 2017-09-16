@@ -388,7 +388,14 @@ function islandora_namespace_homepage_preprocess_islandora_solr(&$variables) {
           $thumb = $domdoc->saveXML($domdoc->documentElement);
           $variables['results'][$key]['thumbnail'] = $thumb;
 
-          $title_xml = simplexml_load_string($result['solr_doc']['dc.title']['value']);
+          try {
+            $title_xml = simplexml_load_string($result['solr_doc']['dc.title']['value']);
+          }
+          catch(Exception $e) {
+            $msg = "Problem loading string as xml in pid $pid.\n" . $e->getMessage();
+            watchdog('islandora xml', $msg, $result, WATCHDOG_WARNING);
+            break;
+          }
           if (!$title_xml) {
             break;
           }
