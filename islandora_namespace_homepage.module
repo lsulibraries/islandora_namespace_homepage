@@ -399,8 +399,9 @@ function islandora_namespace_homepage_preprocess_islandora_solr(&$variables) {
           }
           if (!$title_xml) {
             $xml_errors = libxml_get_errors();
-            $err_string = implode("\n", $xml_errors);
-            watchdog('simplexml', $err_string, $result, WATCHDOG_WARNING);
+            foreach($xml_errors as $err) {
+              watchdog('simplexml', $err, $result, WATCHDOG_WARNING);
+            }
             libxml_clear_errors();
             break;
           }
