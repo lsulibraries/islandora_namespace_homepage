@@ -400,7 +400,8 @@ function islandora_namespace_homepage_preprocess_islandora_solr(&$variables) {
           if (!$title_xml) {
             $xml_errors = libxml_get_errors();
             foreach($xml_errors as $err) {
-              watchdog('simplexml', $err->message, $result, WATCHDOG_WARNING);
+              $wdmsg = $err->message . " in pid $pid";
+              watchdog('simplexml', $wdmsg, $result, WATCHDOG_WARNING);
             }
             libxml_clear_errors();
             break;
