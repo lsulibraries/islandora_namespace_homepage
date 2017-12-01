@@ -23,7 +23,7 @@ EOQ;
   $objects = array();
   foreach ($results as $key => $value) {
     $plode = explode('-', $results[$key]['pid']['value']);
-    $objects[$plode[0]] = $plode[0] . '*';
+    $objects[$plode[0]] = $plode[0] . '-*';
   }
   //$objects['all'] = '*';
   return array_unique($objects);
