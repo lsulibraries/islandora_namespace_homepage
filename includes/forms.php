@@ -136,9 +136,9 @@ function myform($form, &$form_state, $namespace) {
 function myform_handle($form, &$form_state) {
   $namespace = $form_state['values']['namespace'];
   $child_ns = get_namespace_children($namespace);
-  $namespaces = array($namespace . '*');
+  $namespaces = array($namespace . '-*');
   foreach ($child_ns as $child) {
-    $namespaces[] = $child . '*';
+    $namespaces[] = $child . '-*';
   }
   // See islandora_solr/includes/blocks.inc
   $search_string = islandora_solr_replace_slashes($form_state['values']['term']);
