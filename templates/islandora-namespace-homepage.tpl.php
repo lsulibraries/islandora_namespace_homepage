@@ -39,7 +39,7 @@
 
 <div class="child-institution-collections">
     <?php foreach ($nsHome['child_collections_for_display'] as $ns => $data): ?>
-    <a href="<?php echo "/$ns"; ?>">
+    <a class="child-institution-link" href="<?php echo "/$ns"; ?>">
         <div class="child-institution-container">
           <div class="child-institution-title">
             <?php echo $data['title']; ?>
