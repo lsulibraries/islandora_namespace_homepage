@@ -29,7 +29,11 @@ function check_user_access_for_object($user, $object, $op) {
   $op_view = 'view fedora repository objects';
   $op_ingest = 'ingest fedora objects';
   if ($pid == 'islandora:root') {
-    $safe_root_actions = array($op_view, $op_ingest);
+    $safe_root_actions = array(
+      $op_view,
+      $op_ingest,
+      'create child collection',
+    );
     if ($op == 'delete fedora objects and datastreams') {
       return FALSE;
     }
