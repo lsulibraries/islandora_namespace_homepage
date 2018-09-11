@@ -20,6 +20,7 @@
     <ul class="institution-collection-list">
         <div class="institution-collection-list-header">Collections</div>
         <?php foreach ($nsHome['collections'] as $pid => $map): ?>
+          <!-- Somewhere here will be the item count derived from content stats -->
           <div class="institution-collection-list-a" data-target='<?php echo $map['url']; ?>'>
               <li class="institution-collection-list-li">
                   <div class="institution-collection-list-item-count"><?php echo $map['count']; ?></div>
@@ -39,6 +40,7 @@
 
 <div class="child-institution-collections">
     <?php foreach ($nsHome['child_collections_for_display'] as $ns => $data): ?>
+      <!-- Somewhere in here will go institution totals for sub institutio ns-->
     <a class="child-institution-link" href="<?php echo "/$ns"; ?>">
         <div class="child-institution-container">
           <div class="child-institution-title">
@@ -53,8 +55,8 @@
           <div class="child-institution-count-items">
             <?php echo $data['itemcount']; ?>
           </div>
+          <div class='inst_totals'><?php print islandora_namespace_homepage_ask_for_content_stats($ns . '-')?></div>
         </div>
     </a>
     <?php endforeach; ?>
 </div>
-

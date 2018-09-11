@@ -108,7 +108,7 @@ function namespace_homepage_page($namespace) {
 
 /**
  * Implements hook_theme().
- * 
+ *
  */
 function islandora_namespace_homepage_theme($existing, $type, $theme, $path) {
   return array(
@@ -124,7 +124,7 @@ function islandora_namespace_homepage_theme($existing, $type, $theme, $path) {
  *
  * When a new collection object is ingested, check to see if the namespace
  * prefix is already cached in the variables table.
- * 
+ *
  * If not, trigger a menu_rebuild(), which will in turn call this module's
  * hook_menu() which will refresh the list of known prefixes.
  */
@@ -229,7 +229,7 @@ function islandora_namespace_homepage_form_user_login_block_alter(&$form, &$form
 
 /**
  * Implements hook_islandora_object_access
- * 
+ *
  * @param type $op
  * @param type $object
  * @param type $user
@@ -265,7 +265,7 @@ function islandora_namespace_homepage_field_access($op, $field, $entity_type, $e
 }
 
 /**
- * 
+ *
  * @param type $user
  * @return array
  */
@@ -431,5 +431,31 @@ function islandora_namespace_homepage_islandora_breadcrumbs_alter(&$breadcrumbs,
     if ($href == '/islandora') {
       $breadcrumbs[$key] = $prefix_home;
     }
+  }
+}
+
+
+
+function islandora_namespace_homepage_ask_for_content_stats($pid_or_inst) {
+  $conditional = strstr($pid_or_inst, ':') ? 'coll' : 'inst';
+  $results = '';
+  if (module_exists('islandora_content_stats')) {
+    module_load_include('inc', 'islandora_content_stats', 'includes/utilities');
+    $last_run = db_query('select max(timestamp) from {islandora_content_stats}');
+    $last_run_time = $last_run->fetchField();
+    $results = db_select('islandora_content_stats', 'stats')
+    ->fields('stats', array('id', 'inst', 'cmodel', 'coll', 'count', 'timestamp'))
+    ->condition('timestamp', $last_run_time)
+    ->condition($conditional, $pid_or_inst)
+    ->execute();
+    $output = array();
+    foreach ($results as $total) {
+      $output[] = map_cmodels($total->cmodel) . ': ' . $total->count;
+    }
+    $total_string =  implode(' ', $output);
+    return $total_string;
+  }
+  else {
+    return 'islandora content stats module not found.';
   }
 }
