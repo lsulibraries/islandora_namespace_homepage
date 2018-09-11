@@ -55,7 +55,11 @@
           <div class="child-institution-count-items">
             <?php echo $data['itemcount']; ?>
           </div>
-          <div class='inst_totals'><?php print islandora_namespace_homepage_ask_for_content_stats($ns . '-')?></div>
+          <?php $stats = islandora_namespace_homepage_ask_for_content_stats($ns . '-') ?>
+          <?php foreach ($stats as $model_machine => $model_and_count) : ?>
+
+          <div class="inst_total <?php print $model_machine ?>"><?php print $model_and_count?></div>
+        <?php endforeach; ?>
         </div>
     </a>
     <?php endforeach; ?>

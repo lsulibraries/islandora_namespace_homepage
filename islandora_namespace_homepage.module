@@ -444,16 +444,15 @@ function islandora_namespace_homepage_ask_for_content_stats($pid_or_inst) {
     $last_run = db_query('select max(timestamp) from {islandora_content_stats}');
     $last_run_time = $last_run->fetchField();
     $results = db_select('islandora_content_stats', 'stats')
-    ->fields('stats', array('id', 'inst', 'cmodel', 'coll', 'count', 'timestamp'))
+    ->fields('stats', array( 'cmodel', 'coll', 'count', 'timestamp'))
     ->condition('timestamp', $last_run_time)
     ->condition($conditional, $pid_or_inst)
     ->execute();
     $output = array();
     foreach ($results as $total) {
-      $output[] = map_cmodels($total->cmodel) . ': ' . $total->count;
+      $output[$total->cmodel] = map_cmodels($total->cmodel) . ' : ' . $total->count;
     }
-    $total_string =  implode(' ', $output);
-    return $total_string;
+    return $output;
   }
   else {
     return 'islandora content stats module not found.';
