@@ -11,9 +11,9 @@
     </div>
     <div class="institution-about"><?php echo $nsHome['description']; ?>
       <div class='institution_total_wrapper'>Total number of items by type:
-      <?php foreach ($nsHome['global_totals'] as $model_machine => $model_and_count) : ?>
+      <?php foreach ($nsHome['global_totals'] as $model => $model_machine_and_count) : ?>
+        <?php foreach ($model_machine_and_count as $model_machine => $count) : ?>
         <div class="inst_total <?php print $model_machine ?>">
-        <?php foreach ($model_and_count as $model => $count) : ?>
             <div class='model'><?php print $model?></div>
             <div class='count'><?php print $count?></div>
         <?php endforeach; ?>
@@ -66,8 +66,8 @@
         </div>
         <!-- institution totals for institution/sub-institution-->
         <div class='sub_institution_totals_wrapper'>Total items in this sub-institution:
-        <?php foreach ($nsHome['child_collections_for_display'][$ns]['child_totals'] as $model_machine => $model_and_count) : ?>
-          <?php foreach ($model_and_count as $model => $count) : ?>
+        <?php foreach ($nsHome['child_collections_for_display'][$ns]['child_totals'] as $model => $model_machine_and_count) : ?>
+          <?php foreach ($model_machine_and_count as $model_machine => $count) : ?>
             <div class="inst_total <?php print $model_machine ?>">
               <div class='model'><?php print $model ?></div>
               <div class='count'><?php print $count ?></div>

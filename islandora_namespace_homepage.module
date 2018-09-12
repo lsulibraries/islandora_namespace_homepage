@@ -457,8 +457,9 @@ function islandora_namespace_homepage_ask_for_content_stats($pid_or_inst) {
     ->execute();
     $output = array();
     foreach ($results as $total) {
-      $output[$total->cmodel][map_cmodels($total->cmodel)] = $total->count;
+      $output[map_cmodels($total->cmodel)][$total->cmodel] = $total->count;
     }
+    ksort($output);
     return $output;
   }
   else {
