@@ -74,9 +74,9 @@ function get_field_or_default($key, $record, $namespace) {
 
 /**
  * Get the pids for a given ns prefix and optionally, child prefixes.
- * 
+ *
  * @param type $target_prefix
- * 
+ *
  * @param type $recurse
  * @return type
  */

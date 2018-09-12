@@ -65,6 +65,8 @@ function namespace_homepage_page($namespace) {
   $variables['namespace'] = $namespace;
   $variables['namespace_admin'] = homepage_administrator_access_callback($namespace);
   $variables['proxyAdmin'] = user_access(ISLANDORA_NAMESPACE_HOMEPAGE_OBJECT_MANAGEMENT_EXEMPT) || $variables['namespace_admin'];
+  $variables['global_totals'] = islandora_namespace_homepage_ask_for_content_stats($namespace);
+
 
   $proxied = inh_field($namespace, 'harvested') ? TRUE : FALSE;
 
@@ -87,6 +89,9 @@ function namespace_homepage_page($namespace) {
   $variables['collections'] = $collections;
 
   $variables['child_collections_for_display'] = get_child_collections_for_display($namespace);
+  foreach ($variables['child_collections_for_display'] as $ns => $data){
+    $variables['child_collections_for_display'][$ns]['child_totals'] = islandora_namespace_homepage_ask_for_content_stats($ns);
+  }
   $record = get_record($namespace);
   $variables['title'] = get_field_or_default('title', $record, $namespace);
   $variables['description'] = get_field_or_default('description', $record, $namespace);
@@ -433,6 +438,9 @@ function islandora_namespace_homepage_islandora_breadcrumbs_alter(&$breadcrumbs,
     }
   }
 }
+
+
+
 
 function islandora_namespace_homepage_ask_for_content_stats($pid_or_inst) {
   $conditional = strstr($pid_or_inst, ':') ? 'coll' : 'inst';

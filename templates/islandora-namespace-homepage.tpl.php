@@ -10,9 +10,8 @@
         <?php endif; ?>
     </div>
     <div class="institution-about"><?php echo $nsHome['description']; ?>
-      <?php $stats = islandora_namespace_homepage_ask_for_content_stats($nsHome['namespace']) ?>
       <div class='institution_total_wrapper'>Total number of items by type:
-      <?php foreach ($stats as $model_machine => $model_and_count) : ?>
+      <?php foreach ($nsHome['global_totals'] as $model_machine => $model_and_count) : ?>
         <div class="inst_total <?php print $model_machine ?>">
         <?php foreach ($model_and_count as $model => $count) : ?>
             <div class='model'><?php print $model?></div>
@@ -67,8 +66,7 @@
         </div>
         <!-- institution totals for institution/sub-institution-->
         <div class='sub_institution_totals_wrapper'>Total items in this sub-institution:
-        <?php $stats = islandora_namespace_homepage_ask_for_content_stats($ns) ?>
-        <?php foreach ($stats as $model_machine => $model_and_count) : ?>
+        <?php foreach ($nsHome['child_collections_for_display'][$ns]['child_totals'] as $model_machine => $model_and_count) : ?>
           <?php foreach ($model_and_count as $model => $count) : ?>
             <div class="inst_total <?php print $model_machine ?>">
               <div class='model'><?php print $model ?></div>
