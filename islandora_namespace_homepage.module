@@ -434,8 +434,6 @@ function islandora_namespace_homepage_islandora_breadcrumbs_alter(&$breadcrumbs,
   }
 }
 
-
-
 function islandora_namespace_homepage_ask_for_content_stats($pid_or_inst) {
   $conditional = strstr($pid_or_inst, ':') ? 'coll' : 'inst';
   $pid_or_inst = $conditional == 'inst' ? $pid_or_inst . '-' : $pid_or_inst;
@@ -451,11 +449,11 @@ function islandora_namespace_homepage_ask_for_content_stats($pid_or_inst) {
     ->execute();
     $output = array();
     foreach ($results as $total) {
-      $output[$total->cmodel] = map_cmodels($total->cmodel) . ' : ' . $total->count;
+      $output[$total->cmodel][map_cmodels($total->cmodel)] = $total->count;
     }
     return $output;
   }
   else {
-    return 'islandora content stats module not found.';
+    return;
   }
 }

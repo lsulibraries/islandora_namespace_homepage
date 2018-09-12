@@ -9,7 +9,19 @@
           <img src="<?php echo $nsHome['logo_href']; ?>" style="max-width: 100px;">
         <?php endif; ?>
     </div>
-    <div class="institution-about"><?php echo $nsHome['description']; ?></div>
+    <div class="institution-about"><?php echo $nsHome['description']; ?>
+      <?php $stats = islandora_namespace_homepage_ask_for_content_stats($nsHome['namespace']) ?>
+      <div class='institution_total_wrapper'>Total number of items by type:
+      <?php foreach ($stats as $model_machine => $model_and_count) : ?>
+        <div class="inst_total <?php print $model_machine ?>">
+        <?php foreach ($model_and_count as $model => $count) : ?>
+            <div class='model'><?php print $model?></div>
+            <div class='count'><?php print $count?></div>
+        <?php endforeach; ?>
+      </div>
+      <?php endforeach; ?>
+    </div>
+    </div>
 </div>
 
 <div class="institution-search"><?php echo render($nsHome['search']); ?></div>
@@ -40,25 +52,32 @@
 <div class="child-institution-collections">
     <?php foreach ($nsHome['child_collections_for_display'] as $ns => $data): ?>
     <a class="child-institution-link" href="<?php echo "/$ns"; ?>">
-        <div class="child-institution-container">
-          <div class="child-institution-title">
-            <?php echo $data['title']; ?>
-          </div>
-          <div class="child-institution-description">
-            <?php echo $data['description']; ?>
-          </div>
-          <div class="child-institution-count-collections">
-            <?php echo $data['collectioncount']; ?>
-          </div>
-          <div class="child-institution-count-items">
-            <?php echo $data['itemcount']; ?>
-          </div>
-          <!-- institution totals for institution/sub-institution-->
-          <?php $stats = islandora_namespace_homepage_ask_for_content_stats($ns) ?>
-          <?php foreach ($stats as $model_machine => $model_and_count) : ?>
-            <div class="inst_total <?php print $model_machine ?>"><?php print $model_and_count?></div>
+      <div class="child-institution-container">
+        <div class="child-institution-title">
+          <?php echo $data['title']; ?>
+        </div>
+        <div class="child-institution-description">
+          <?php echo $data['description']; ?>
+        </div>
+        <div class="child-institution-count-collections">
+          <?php echo $data['collectioncount']; ?>
+        </div>
+        <div class="child-institution-count-items">
+          <?php echo $data['itemcount']; ?>
+        </div>
+        <!-- institution totals for institution/sub-institution-->
+        <div class='sub_institution_totals_wrapper'>Total items in this sub-institution:
+        <?php $stats = islandora_namespace_homepage_ask_for_content_stats($ns) ?>
+        <?php foreach ($stats as $model_machine => $model_and_count) : ?>
+          <?php foreach ($model_and_count as $model => $count) : ?>
+            <div class="inst_total <?php print $model_machine ?>">
+              <div class='model'><?php print $model ?></div>
+              <div class='count'><?php print $count ?></div>
+            </div>
+          <?php endforeach; ?>
         <?php endforeach; ?>
         </div>
+      </div>
     </a>
     <?php endforeach; ?>
 </div>
