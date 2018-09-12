@@ -438,6 +438,7 @@ function islandora_namespace_homepage_islandora_breadcrumbs_alter(&$breadcrumbs,
 
 function islandora_namespace_homepage_ask_for_content_stats($pid_or_inst) {
   $conditional = strstr($pid_or_inst, ':') ? 'coll' : 'inst';
+  $pid_or_inst = $conditional == 'inst' ? $pid_or_inst . '-' : $pid_or_inst;
   $results = '';
   if (module_exists('islandora_content_stats')) {
     module_load_include('inc', 'islandora_content_stats', 'includes/utilities');
