@@ -68,7 +68,8 @@ function get_field_or_default($key, $record, $namespace) {
         $name = ucwords(get_field_or_default('title', $record, $namespace));
         return "$name is a contributing member of the Louisiana Digital Library.";
       }
-      return $record->$key;
+      case 'fp_logo' :
+        return isset($record->$key) ? $record->$key : '/sites/all/themes/ldl/images/zBCP7zk.png';
   }
 }
 

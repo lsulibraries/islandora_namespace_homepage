@@ -36,6 +36,18 @@ function islandora_namespace_homepage_schema() {
         'not null' => FALSE,
         'description' => 'File id (fid) of the managed file that serves as the logo for this entity.',
       ),
+      'fp_logo' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => FALSE,
+        'description' => 'File id (fid) of the managed file that serves as the frontpage logo for this entity.',
+      ),
+      'color' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => FALSE,
+        'description' => 'Hexadecimal code for the color of this entity.',
+      ),
       'harvested' => array(
         'type' => 'varchar',
         'length' => 255,
@@ -61,7 +73,7 @@ function islandora_namespace_homepage_schema() {
 }
 
 /**
- * 
+ *
  */
 function islandora_namespace_homepage_install() {
   // Create a field.
@@ -87,7 +99,7 @@ function islandora_namespace_homepage_install() {
 }
 
 /**
- * 
+ *
  */
 function islandora_namespace_homepage_uninstall() {
   field_delete_field('field_namespace');

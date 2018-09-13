@@ -34,6 +34,19 @@ function admin_form($form, &$form_state, $ns) {
     '#default_value' => $defval('logo'),
     '#upload_location' => 'public://namespace-thumbs/',
   );
+  $form['fp_logo'] = array(
+    '#type' => 'managed_file',
+    '#title' => t('Front page logo'),
+    '#description' => t('Upload a file, allowed extensions: jpg, jpeg, png, gif'),
+    '#default_value' => $defval('fp_logo'),
+    '#upload_location' => 'public://fp-thumbs/'
+  );
+  $form['color'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Color in Hexadecimal'),
+    '#description' => t('Enter a hexidecimal code for your institution'),
+    '#default_value' => $defval('color')
+  );
   $form['harvested'] = array(
     '#type' => 'textfield',
     '#title' => "Base URL for harvested namespaces",
@@ -104,7 +117,7 @@ function admin_form_submit($form, &$form_state) {
         ->execute();
   }
 
-  // Record that the module (in this example, user module) is using the file. 
+  // Record that the module (in this example, user module) is using the file.
   if (isset($file)) {
     file_usage_add($file, $mod, $mod, $record->id);
   }
