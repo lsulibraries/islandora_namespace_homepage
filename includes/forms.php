@@ -84,23 +84,31 @@ function admin_form_submit($form, &$form_state) {
   $title_key = "title";
   $descr_key = "description";
   $logo_key = "logo";
+  $fp_logo_key = "fp_logo";
+  $color_key = "color";
   $harvested_key = "harvested";
   $harvested_regex_key = "harvested_regex";
+
+  if ($form_state['values'][$fp_logo_key]) {
+    $file = file_load($form_state['values'][$fp_logo_key]);
+    $file->status = FILE_STATUS_PERMANENT;
+    $fp_file = file_save($file);
+  }
 
   if ($form_state['values'][$logo_key]) {
     // Load the file via file.fid.
     $file = file_load($form_state['values'][$logo_key]);
-
     // Change status to permanent.
     $file->status = FILE_STATUS_PERMANENT;
-
     // Save.
     $file = file_save($file);
   }
 
   $record->$title_key = $v[$title_key];
   $record->$descr_key = $v[$descr_key]['value'];
+  $record->$color_key = $v[$color_key];
   $record->$logo_key = isset($file->fid) ? $file->fid : NULL;
+  $record->$fp_logo_key = isset($fp_file->fid) ? $fp_file->fid : NULL;
   $record->$harvested_key = !empty($v[$harvested_key]) ? $v[$harvested_key] : NULL;
   $record->$harvested_regex_key = !empty($v[$harvested_regex_key]) ? $v[$harvested_regex_key] : NULL;
 
@@ -120,6 +128,9 @@ function admin_form_submit($form, &$form_state) {
   // Record that the module (in this example, user module) is using the file.
   if (isset($file)) {
     file_usage_add($file, $mod, $mod, $record->id);
+  }
+  if (isset($fp_file)) {
+    file_usage_add($fp_file, $mod, $mod, $record->id);
   }
 }
 
