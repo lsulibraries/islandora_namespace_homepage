@@ -95,6 +95,7 @@ function namespace_homepage_page($namespace) {
   $record = get_record($namespace);
   $variables['title'] = get_field_or_default('title', $record, $namespace);
   $variables['description'] = get_field_or_default('description', $record, $namespace);
+  $variables['color'] = get_field_or_default('color', $record, $namespace);
 
   $file = isset($record->logo) ? file_load($record->logo) : FALSE;
   if ($file) {

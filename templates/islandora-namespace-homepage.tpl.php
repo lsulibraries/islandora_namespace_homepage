@@ -22,7 +22,6 @@
     </div>
     </div>
 </div>
-
 <div class="institution-search"><?php echo render($nsHome['search']); ?></div>
 
 <div class="institution-browse-bys"></div>

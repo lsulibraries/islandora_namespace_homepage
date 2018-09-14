@@ -70,6 +70,8 @@ function get_field_or_default($key, $record, $namespace) {
       }
       case 'fp_logo' :
         return isset($record->$key) ? $record->$key : '/sites/all/themes/ldl/images/zBCP7zk.png';
+      case 'color' :
+        return isset($record->color) && strlen($record->color) > 0 ? $record->color : '#ffffff';
   }
 }
 
