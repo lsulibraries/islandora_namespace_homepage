@@ -431,10 +431,12 @@ function islandora_namespace_homepage_islandora_breadcrumbs_alter(&$breadcrumbs,
   $title = inh_title($prefix);
   $prefix_home = "<a href='/$prefix'>$title</a>";
   foreach ($breadcrumbs as $key => $b) {
+    if($b != '...'){
     $xml = simplexml_load_string($b);
     $href = (string)$xml['href'];
     if ($href == '/islandora') {
       $breadcrumbs[$key] = $prefix_home;
+    }
     }
   }
 }
