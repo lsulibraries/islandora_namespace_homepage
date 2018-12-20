@@ -17,6 +17,17 @@ function update_namespace_prefixes_cache() {
     if (!$prefix) {
       continue;
     }
+    // heirarchical prefix
+    if (FALSE !== strpos($prefix, '-')) {
+      $prefix_chunks = explode('-', $prefix);
+      array_pop($prefix_chunks);
+      while (!empty($prefix_chunks)) {
+        $chunk = array_pop($prefix_chunks);
+        if (!in_array($chunk, $namespace_prefixes)) {
+          $namespace_prefixes[] = $chunk;
+        }
+      }
+    }
     $namespace_prefixes[] = $prefix;
   }
   $prefixes = array_unique(array_values($namespace_prefixes));
