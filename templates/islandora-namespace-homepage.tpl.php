@@ -37,9 +37,6 @@ document.body.className += ' ' + 'institutionPage';
         <div class="title">
           <?php echo $data['title']; ?>
         </div>
-        <div class="institution-description">
-          <?php echo $data['description']; ?>
-        </div>
         <div class="institution-count-collections">
           <?php echo $data['collectioncount']; ?> 
         </div>
@@ -54,9 +51,8 @@ document.body.className += ' ' + 'institutionPage';
         <div class="category"><i class="fa fa-th" aria-hidden="true"></i> Collection</div>
         <div class="label">
             <div class="title"><?php echo $map['obj']->label; ?></div>
-            <div class="items"><?php echo $map['count']; ?> items</div>         
-            <div class='description'><?php echo $map['obj']->description; ?></div>
-        </div>
+            <div class="items"><?php echo $map['count']; ?> items</div>
+       </div>
         <?php if ($nsHome['proxyAdmin'] && isset($map['proxy_url'])): ?>
           <div class="institution-collection-list-item-manage-proxy">
               <a class="institution-collection-list-item-manage-proxy-link" href="<?php echo $map['proxy_url'] ?>">Manage proxy</a>
